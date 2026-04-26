@@ -1,0 +1,2472 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Service Auto</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Service Auto" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Source Sans 3', sans-serif; background: #1A1A2E; color: #E0E0E0; min-height: 100vh; }
+    button { cursor: pointer; font-family: 'Source Sans 3', sans-serif; }
+    input, select, textarea { font-family: 'Source Sans 3', sans-serif; }
+    #app { max-width: 600px; margin: 0 auto; padding: 16px 14px 40px; }
+
+    /* Header */
+    .header-row { margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .header-left { flex: 1; min-width: 0; }
+    .header-title { font-family: 'Playfair Display', serif; font-size: 22px; color: #E94560; }
+    .header-sub { color: #718096; font-size: 11px; margin-top: 3px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .header-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+    .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #4CAF50; display: inline-block; animation: pulse 2s infinite; flex-shrink: 0; }
+
+    /* Nav tabs — 2 rânduri pe mobil */
+    .nav-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 14px; }
+    .nav-tab { padding: 10px 8px; border-radius: 10px; border: 1px solid #0F3460; font-size: 12px; font-weight: 600; background: #16213E; color: #718096; cursor: pointer; text-align: center; width: 100%; }
+    .nav-tab.active { background: #E94560; color: white; border-color: #E94560; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .stat-card { background: #16213E; border: 1px solid #0F3460; border-radius: 12px; padding: 12px 6px; text-align: center; }
+    .stat-val { font-size: 22px; font-weight: 700; font-family: 'Playfair Display', serif; line-height: 1; }
+    .stat-lbl { font-size: 10px; color: #718096; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.03em; line-height: 1.2; }
+
+    /* Buttons */
+    .btn { padding: 11px 16px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn:active { opacity: 0.7; }
+    .btn-primary { background: #E94560; color: white; }
+    .btn-secondary { background: #0F3460; color: #A0C4FF; }
+    .btn-green { background: #1B4332; color: #4CAF50; border: 1px solid #4CAF50; }
+    .btn-orange { background: #3A2000; color: #F39C12; border: 1px solid #F39C12; }
+    .btn-danger { background: transparent; color: #E94560; border: 1px solid #E94560; font-size: 13px; padding: 8px 12px; min-height: 36px; border-radius: 8px; }
+    .btn-full { width: 100%; }
+    .btn-row { display: flex; gap: 10px; margin-top: 14px; }
+    .btn-row .btn { flex: 1; }
+    .btn-sm { padding: 8px 12px; font-size: 13px; min-height: 36px; }
+
+    /* Forms */
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 11px; font-weight: 600; color: #A0AEC0; margin-bottom: 6px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; background: #0F3460; border: 1px solid #1A4A80; color: #E0E0E0; border-radius: 10px; padding: 12px 14px; font-size: 16px; outline: none; -webkit-appearance: none; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #E94560; }
+    .form-group select option { background: #16213E; }
+    .add-form-box { background: #16213E; border: 1px solid #E94560; border-radius: 16px; padding: 18px; margin-bottom: 16px; }
+
+    /* Car cards */
+    .car-card { border-radius: 16px; margin-bottom: 10px; overflow: hidden; border: 2px solid #0F3460; background: #16213E; }
+    .car-card.sla-yellow { border-color: #F39C12; background: #1E1A0E; }
+    .car-card.sla-red { border-color: #E94560; background: #1E0E0E; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; cursor: pointer; min-height: 68px; }
+    .card-nr { font-family: 'Playfair Display', serif; font-size: 20px; color: #E0E0E0; }
+    .card-service { font-size: 13px; color: #A0C4FF; margin-top: 2px; }
+    .card-vin { font-size: 11px; color: #4A5568; margin-top: 2px; }
+    .card-badges { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; justify-content: flex-end; max-width: 55%; }
+    .badge { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .card-arrow { color: #4A5568; font-size: 16px; margin-left: 4px; flex-shrink: 0; }
+    .card-body { padding: 0 14px 18px; }
+    .divider { height: 1px; background: #0F3460; margin-bottom: 14px; }
+    .sla-bar { padding: 6px 16px; font-size: 12px; font-weight: 600; text-align: center; }
+    .sla-bar.yellow { background: #3A2A00; color: #F39C12; }
+    .sla-bar.red { background: #3A0A0A; color: #E94560; }
+
+    /* Card tabs */
+    .tabs-row { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; scrollbar-width: none; }
+    .tabs-row::-webkit-scrollbar { display: none; }
+    .tab { padding: 9px 13px; border-radius: 10px; border: none; font-size: 12px; font-weight: 600; background: #0F2040; color: #718096; cursor: pointer; white-space: nowrap; flex-shrink: 0; min-height: 36px; }
+    .tab.active { background: #1A3A6E; color: #A0C4FF; border: 1px solid #2A5A9E; }
+
+    /* Sections */
+    .section-box { background: #0F2040; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .section-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .field-block { margin-bottom: 16px; }
+    .field-label { font-size: 11px; color: #718096; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .field-value { font-size: 15px; color: #CBD5E0; line-height: 1.5; }
+    .field-edit { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+    .field-edit input { flex: 1; background: #0F3460; border: 1px solid #1A4A80; color: #E0E0E0; border-radius: 10px; padding: 10px 12px; font-size: 16px; outline: none; -webkit-appearance: none; }
+
+    /* Piese */
+    .piesa-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid #1A2A4A; }
+    .piesa-row:last-child { border-bottom: none; }
+    .inner-form { background: #16213E; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+
+    /* Tasks */
+    .task-row { padding: 12px 0; border-bottom: 1px solid #1A2A4A; }
+    .task-row:last-child { border-bottom: none; }
+    .task-row.done { opacity: 0.5; }
+    .task-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .task-text { font-size: 15px; color: #CBD5E0; line-height: 1.4; flex: 1; }
+    .task-text.done-text { text-decoration: line-through; color: #4A5568; }
+    .task-meta { font-size: 11px; color: #4A5568; margin-top: 6px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .task-assignee { font-size: 12px; font-weight: 600; color: #A0C4FF; }
+    .task-form { background: #16213E; border-radius: 10px; padding: 14px; margin-bottom: 12px; border: 1px solid #1A3A5A; }
+
+    /* Remindere */
+    .reminder-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid #1A2A4A; }
+    .reminder-row:last-child { border-bottom: none; }
+    .reminder-form { background: #16213E; border-radius: 10px; padding: 14px; margin-bottom: 14px; border: 1px solid #2D6A2D; }
+    .date-time-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .date-time-row > div { flex: 1; }
+    .date-time-row input { width: 100%; background: #0F3460; border: 1px solid #1A4A80; color: #E0E0E0; border-radius: 10px; padding: 10px 12px; font-size: 15px; outline: none; -webkit-appearance: none; }
+
+    /* Jurnal */
+    .jurnal-row { padding: 12px 0; border-bottom: 1px solid #1A2A4A; }
+    .jurnal-row:last-child { border-bottom: none; }
+    .jurnal-meta { font-size: 11px; color: #4A5568; margin-bottom: 5px; }
+    .jurnal-text { font-size: 14px; color: #CBD5E0; line-height: 1.5; }
+    .jurnal-input-box { background: #16213E; border-radius: 10px; padding: 14px; margin-bottom: 14px; border: 1px solid #1A3A5A; }
+    .jurnal-input-box textarea { width: 100%; background: #0F3460; border: 1px solid #1A4A80; color: #E0E0E0; border-radius: 10px; padding: 12px; font-size: 15px; outline: none; resize: vertical; margin-bottom: 10px; }
+
+    /* TODO page */
+    .todo-card { background: #16213E; border: 1px solid #0F3460; border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+    .todo-car-label { font-size: 11px; color: #A0C4FF; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .todo-text { font-size: 15px; color: #E0E0E0; line-height: 1.4; margin-bottom: 8px; }
+    .todo-meta { font-size: 12px; color: #4A5568; display: flex; gap: 12px; flex-wrap: wrap; }
+    .todo-date { color: #F39C12; font-weight: 600; }
+    .todo-nodate { color: #E94560; font-weight: 600; }
+    .todo-done { background: #0F2040; border-color: #0F2040; opacity: 0.5; }
+
+    /* Archive */
+    .archive-card { background: #16213E; border: 1px solid #0F3460; border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+    .search-box { background: #16213E; border: 1px solid #0F3460; border-radius: 10px; padding: 12px 14px; font-size: 16px; color: #E0E0E0; width: 100%; outline: none; margin-bottom: 14px; }
+
+    /* Profile setup */
+    .profile-screen { max-width: 400px; margin: 60px auto; padding: 0 20px; text-align: center; }
+    .profile-box { background: #16213E; border: 1px solid #E94560; border-radius: 20px; padding: 32px 24px; }
+
+    /* SLA settings */
+    .sla-settings { background: #16213E; border: 1px solid #0F3460; border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+    .sla-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .sla-row:last-child { margin-bottom: 0; }
+    .sla-label { font-size: 14px; flex: 1; color: #CBD5E0; }
+    .sla-input { width: 70px; background: #0F3460; border: 1px solid #1A4A80; color: #E0E0E0; border-radius: 8px; padding: 8px 10px; font-size: 16px; text-align: center; outline: none; -webkit-appearance: none; }
+
+    /* Misc */
+    .empty-state { color: #4A5568; font-size: 14px; text-align: center; padding: 24px 0; }
+    .loading { text-align: center; padding: 40px 20px; color: #4A5568; font-size: 16px; }
+    .delete-row { text-align: center; margin-top: 8px; }
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1B4332; border: 1px solid #4CAF50; color: #A5D6A7; padding: 14px 28px; border-radius: 12px; font-size: 15px; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.5); white-space: nowrap; display: none; }
+    .user-chip { display: inline-flex; align-items: center; gap: 5px; background: #0F2040; border: 1px solid #1A3A6E; border-radius: 20px; padding: 4px 10px; font-size: 12px; color: #A0C4FF; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+/* === VULCANIZARE STYLES === */
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Source Sans 3', sans-serif; background: #1A1A2E; color: #E0E0E0; min-height: 100vh; }
+    button { cursor: pointer; font-family: 'Source Sans 3', sans-serif; }
+    input, select, textarea { font-family: 'Source Sans 3', sans-serif; }
+    #app { max-width: 640px; margin: 0 auto; padding: 16px 14px 40px; }
+
+    .header-row { margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .header-title { font-family: 'Playfair Display', serif; font-size: 22px; color: #F39C12; }
+    .header-sub { color: #718096; font-size: 11px; margin-top: 3px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #4CAF50; display: inline-block; animation: pulse 2s infinite; }
+    .back-btn { background: #16213E; border: 1px solid #0F3460; color: #A0C4FF; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+    .nav-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 14px; }
+    .nav-tab { padding: 10px 8px; border-radius: 10px; border: 1px solid #0F3460; font-size: 12px; font-weight: 600; background: #16213E; color: #718096; cursor: pointer; text-align: center; width: 100%; }
+    .nav-tab.active { background: #F39C12; color: #1A1A00; border-color: #F39C12; }
+
+    .btn { padding: 11px 16px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn:active { opacity: 0.7; }
+    .btn-primary { background: #F39C12; color: #1A1A00; }
+    .btn-secondary { background: #0F3460; color: #A0C4FF; }
+    .btn-green { background: #1B4332; color: #4CAF50; border: 1px solid #4CAF50; }
+    .btn-red { background: #3A0A0A; color: #E94560; border: 1px solid #E94560; }
+    .btn-danger { background: transparent; color: #E94560; border: 1px solid #E94560; font-size: 13px; padding: 8px 12px; min-height: 36px; border-radius: 8px; }
+    .btn-full { width: 100%; }
+    .btn-row { display: flex; gap: 10px; margin-top: 14px; }
+    .btn-row .btn { flex: 1; }
+    .btn-sm { padding: 8px 12px; font-size: 12px; min-height: 36px; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 11px; font-weight: 600; color: #A0AEC0; margin-bottom: 6px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; background: #0F3460; border: 1px solid #1A4A80; color: #E0E0E0; border-radius: 10px; padding: 12px 14px; font-size: 16px; outline: none; -webkit-appearance: none; }
+    .form-group input:focus, .form-group select:focus { border-color: #F39C12; }
+    .form-group select option { background: #16213E; }
+    .add-form-box { background: #16213E; border: 1px solid #F39C12; border-radius: 16px; padding: 18px; margin-bottom: 16px; }
+
+    .card { background: #16213E; border: 1px solid #0F3460; border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+    .card-title { font-family: 'Playfair Display', serif; font-size: 18px; color: #E0E0E0; margin-bottom: 4px; }
+    .card-sub { font-size: 12px; color: #718096; }
+
+    .tip-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .tip-iarna { background: #001A3A; color: #66B2FF; border: 1px solid #0050A0; }
+    .tip-vara { background: #3A1500; color: #FF9944; border: 1px solid #7A3A00; }
+    .tip-allseason { background: #1B3A1B; color: #66CC66; border: 1px solid #2A6A2A; }
+
+    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .filter-btn { padding: 8px 14px; border-radius: 8px; border: 1px solid #0F3460; font-size: 12px; font-weight: 600; background: #16213E; color: #718096; cursor: pointer; }
+    .filter-btn.active-iarna { background: #001A3A; color: #66B2FF; border-color: #0050A0; }
+    .filter-btn.active-vara { background: #3A1500; color: #FF9944; border-color: #7A3A00; }
+    .filter-btn.active-allseason { background: #1B3A1B; color: #66CC66; border-color: #2A6A2A; }
+    .filter-btn.active-toate { background: #F39C12; color: #1A1A00; border-color: #F39C12; }
+
+    .dim-badge { background: #16213E; border: 1px solid #2A4A6A; border-radius: 6px; padding: 2px 8px; font-size: 12px; color: #A0C4FF; font-family: monospace; }
+
+    .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #718096; margin-bottom: 10px; margin-top: 16px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .stat-card { background: #16213E; border: 1px solid #0F3460; border-radius: 12px; padding: 12px 6px; text-align: center; }
+    .stat-val { font-size: 22px; font-weight: 700; font-family: 'Playfair Display', serif; line-height: 1; }
+    .stat-lbl { font-size: 10px; color: #718096; margin-top: 4px; text-transform: uppercase; }
+
+    .search-box { width: 100%; background: #16213E; border: 1px solid #0F3460; border-radius: 10px; padding: 12px 14px; font-size: 16px; color: #E0E0E0; outline: none; margin-bottom: 12px; }
+
+    .stoc-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1A2A4A; gap: 10px; }
+    .stoc-row:last-child { border-bottom: none; }
+
+    .deficit { color: #E94560; font-weight: 700; }
+    .surplus { color: #4CAF50; font-weight: 700; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: flex-end; padding: 0; }
+    .modal-box { background: #16213E; border-top: 2px solid #F39C12; border-radius: 20px 20px 0 0; padding: 24px 20px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; color: #F39C12; margin-bottom: 16px; }
+
+    .empty-state { color: #4A5568; font-size: 14px; text-align: center; padding: 24px 0; }
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1B4332; border: 1px solid #4CAF50; color: #A5D6A7; padding: 14px 28px; border-radius: 12px; font-size: 15px; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.5); white-space: nowrap; display: none; }
+    .user-chip { display: inline-flex; align-items: center; gap: 5px; background: #0F2040; border: 1px solid #1A3A6E; border-radius: 20px; padding: 3px 10px; font-size: 11px; color: #A0C4FF; }
+
+    .dim-input-row { display: flex; gap: 6px; align-items: center; }
+    .dim-input-row input { flex: 1; background: #0F3460; border: 1px solid #1A4A80; color: #E0E0E0; border-radius: 8px; padding: 10px 10px; font-size: 16px; outline: none; text-align: center; }
+    .dim-sep { color: #718096; font-size: 16px; font-weight: 700; }
+    .dim-c-check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #A0AEC0; }
+
+    .profile-screen { max-width: 400px; margin: 60px auto; padding: 0 20px; text-align: center; }
+    .profile-box { background: #16213E; border: 1px solid #F39C12; border-radius: 20px; padding: 32px 24px; }
+
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+  
+  </style>
+</head>
+<body>
+<div id="app"><div class="loading">⏳ Se conectează...</div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCY8U1vkZDrM_4jqHL4cooTogNUCyo01Ds",
+  authDomain: "serviceauto-f46c5.firebaseapp.com",
+  projectId: "serviceauto-f46c5",
+  storageBucket: "serviceauto-f46c5.firebasestorage.app",
+  messagingSenderId: "257336890337",
+  appId: "1:257336890337:web:f4bc7590334c626f02f8a0"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+
+// ===== STATE =====
+let cars = [];
+let users = [];
+let settings = { slaYellow: 15, slaRed: 30 };
+let currentUser = JSON.parse(localStorage.getItem("sa_user") || "null");
+let page = "masini"; // masini | todo | arhiva
+let expandedCar = null;
+let activeTab = {};
+let showForm = false;
+let showPiesaForm = null;
+let showReminderForm = null;
+let showTaskForm = null;
+let archiveSearch = "";
+let expandedUser = null;
+let registeredPins = [];
+let generalTasks = [];
+let inventarPiese = [];
+let showGeneralTaskForm = false;
+let showInventarForm = false;
+let arhivaFilter = "toate"; // toate | masini | taskuri | piese
+let newGeneralTask = { text: "", data: "", assignedTo: "" };
+let showCommentForm = null;
+let commentText = "";
+let newPiesa = { nume: "", status: "De comandat" };
+let newReminder = { text: "", data: "", ora: "09:00" };
+let newTask = { text: "", data: "", assignedTo: "" };
+let newInventar = { nume: "", masina: "", cod: "", pret: "", status: "În stoc" };
+
+const STATUS_COLORS = {
+  "De comandat": { bg: "#2A1A2E", text: "#CC88FF", border: "#6A2A9A" },
+  "Comandat":    { bg: "#3A2E00", text: "#FFD166", border: "#7A5E00" },
+  "În tranzit":  { bg: "#001A3A", text: "#66B2FF", border: "#0050A0" },
+  "Sosit":       { bg: "#003A15", text: "#66CC88", border: "#006628" },
+  "Montat":      { bg: "#2A2A2A", text: "#AAAAAA", border: "#444444" },
+};
+const CAR_STATUS = { "În așteptare": "#F39C12", "În lucru": "#3498DB", "Finalizat": "#27AE60" };
+const ROLES = ["Admin", "Operator", "Șofer"];
+const today = new Date().toISOString().split("T")[0];
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  setTimeout(() => t.style.display = "none", 3500);
+}
+
+function fmt(dateStr) {
+  if (!dateStr) return "—";
+  const [y, m, d] = dateStr.split("-");
+  return `${d}.${m}.${y}`;
+}
+
+function daysSince(ts) {
+  if (!ts) return 0;
+  return Math.floor((Date.now() - ts) / (1000 * 60 * 60 * 24));
+}
+
+function getSLA(car) {
+  const days = daysSince(car.createdAt);
+  if (days >= settings.slaRed) return "red";
+  if (days >= settings.slaYellow) return "yellow";
+  return "ok";
+}
+
+function addLog(car, action) {
+  const now = new Date();
+  const dataOra = now.toLocaleDateString("ro-RO") + " · " + now.toLocaleTimeString("ro-RO", {hour:"2-digit",minute:"2-digit"});
+  const entry = { id: Date.now(), text: action, dataOra, user: currentUser?.name || "?" };
+  return [...(car.jurnal || []), entry];
+}
+
+// ===== RENDER =====
+function render() {
+  if (!currentUser) { renderProfile(); return; }
+  const html = `
+    <div class="header-row">
+      <div class="header-left">
+        <div class="header-title">🔧 Service CarHunt</div>
+        <div class="header-sub"><span class="sync-dot"></span> Live · <span class="user-chip">👤 ${currentUser.name} · ${currentUser.role}</span></div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-sm btn-secondary" onclick="showSettings()" style="padding:10px 12px;font-size:16px">⚙️</button>
+      </div>
+    </div>
+
+    ${page === 'vulcanizare' ? '' : `
+    <div class="nav-tabs">
+      <button class="nav-tab ${page==='masini'?'active':''}" onclick="changePage('masini')">🚗 Mașini active</button>
+      <button class="nav-tab ${page==='todo'?'active':''}" onclick="changePage('todo')">📋 TO DO personal</button>
+      <button class="nav-tab ${page==='overview'?'active':''}" onclick="changePage('overview')">📊 Overview</button>
+      <button class="nav-tab ${page==='myactivity'?'active':''}" onclick="changePage('myactivity')">📤 My Activity</button>
+      <button class="nav-tab ${page==='taskgeneral'?'active':''}" onclick="changePage('taskgeneral')">➕ Task nou</button>
+      <button class="nav-tab ${page==='inventar'?'active':''}" onclick="changePage('inventar')">🔩 Inventar Piese</button>
+      <button class="nav-tab ${page==='arhiva'?'active':''}" onclick="changePage('arhiva')">📦 Arhivă</button>
+      <button class="nav-tab" onclick="changePage('vulcanizare')" style="background:linear-gradient(135deg,#F39C12,#E67E22);color:#1A1A00;border-color:#F39C12;font-weight:700">🔄 Vulcanizare</button>
+    </div>`}
+
+    ${page === 'masini' ? renderMasini() : ""}
+    ${page === 'todo' ? renderTodo() : ""}
+    ${page === 'overview' ? renderOverview() : ""}
+    ${page === 'myactivity' ? renderMyActivity() : ""}
+    ${page === 'taskgeneral' ? renderTaskGeneral() : ""}
+    ${page === 'inventar' ? renderInventar() : ""}
+    ${page === 'arhiva' ? renderArhiva() : ""}
+    ${page === 'vulcanizare' ? renderVulcanizare() : ""}
+  `;
+  document.getElementById("app").innerHTML = html;
+}
+
+function renderMasini() {
+  const activeCars = cars.filter(c => !c.archived);
+  const sorted = [...activeCars].sort((a, b) => {
+    const slaOrder = { red: 0, yellow: 1, ok: 2 };
+    return (slaOrder[getSLA(a)] || 2) - (slaOrder[getSLA(b)] || 2);
+  });
+  const total = activeCars.length;
+  const inLucru = activeCars.filter(c => c.status === "În lucru").length;
+  const finalizate = activeCars.filter(c => c.status === "Finalizat").length;
+  const piese = activeCars.reduce((a, c) => a + (c.piese||[]).filter(p => p.status==="Comandat"||p.status==="În tranzit").length, 0);
+  const taskuri = activeCars.reduce((a, c) => a + (c.tasks||[]).filter(t => !t.done && t.assignedTo === currentUser?.name).length, 0);
+  const rosii = activeCars.filter(c => getSLA(c) === "red").length;
+
+  return `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val" style="color:#A0C4FF">${total}</div><div class="stat-lbl">Mașini</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#F39C12">${inLucru}</div><div class="stat-lbl">În lucru</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#27AE60">${finalizate}</div><div class="stat-lbl">Finalizate</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#E94560">${piese}</div><div class="stat-lbl">Piese</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#4CAF50">${taskuri}</div><div class="stat-lbl">Task-urile mele</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#E94560">${rosii}</div><div class="stat-lbl">🚨 Întârziate</div></div>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="toggleForm()" style="margin-bottom:14px">${showForm ? "✕ Anulează" : "+ Mașină nouă"}</button>
+
+    ${showForm ? renderAddCarForm() : ""}
+    ${sorted.length === 0 ? `<div class="empty-state">🚗<br><br>Nicio mașină activă.</div>` : ""}
+    ${sorted.map(car => renderCarCard(car)).join("")}
+  `;
+}
+
+function renderAddCarForm() {
+  return `
+  <div class="add-form-box">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;color:#E94560;margin-bottom:16px">Mașină nouă</div>
+    <div class="form-group"><label>Nr. Înmatriculare *</label><input id="f-nr" placeholder="ex: B 123 ABC" /></div>
+    <div class="form-group"><label>VIN (opțional)</label><input id="f-vin" placeholder="ex: WBA3A5..." /></div>
+    <div class="form-group"><label>Service</label><input id="f-service" placeholder="ex: La Erebus" /></div>
+    <div class="form-group"><label>Status</label>
+      <select id="f-status">${Object.keys(CAR_STATUS).map(s=>`<option>${s}</option>`).join("")}</select>
+    </div>
+    <div class="form-group"><label>Data estimată finalizare</label><input type="date" id="f-data" /></div>
+    <div class="form-group"><label>Reparații necesare</label><textarea id="f-rep" rows="3" placeholder="Descrie reparațiile..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="toggleForm()">Anulează</button>
+      <button class="btn btn-primary" onclick="addCar()">Adaugă</button>
+    </div>
+  </div>`;
+}
+
+function renderCarCard(car) {
+  const sla = getSLA(car);
+  const sc = CAR_STATUS[car.status] || "#718096";
+  const pieseActive = (car.piese||[]).filter(p=>p.status!=="Montat").length;
+  const remCount = (car.remindere||[]).length;
+  const jurnalCount = (car.jurnal||[]).length;
+  const taskCount = (car.tasks||[]).filter(t=>!t.done).length;
+  const tab = activeTab[car.id] || "reparatii";
+  const isExp = expandedCar === car.id;
+  const days = daysSince(car.createdAt);
+
+  return `
+  <div class="car-card ${sla !== 'ok' ? 'sla-'+sla : ''}">
+    ${sla === 'red' ? `<div class="sla-bar red">🚨 ${days} zile în lucru — ÎNTÂRZIAT CRITIC</div>` : ""}
+    ${sla === 'yellow' ? `<div class="sla-bar yellow">⚠️ ${days} zile în lucru — Atenție</div>` : ""}
+    <div class="card-header" onclick="toggleCar('${car.id}')">
+      <div style="flex:1;min-width:0">
+        <div class="card-nr">${car.nrInmatriculare}</div>
+        ${car.service ? `<div class="card-service">📍 ${car.service}</div>` : ""}
+        ${car.vin ? `<div class="card-vin">VIN: ${car.vin}</div>` : ""}
+      </div>
+      <div class="card-badges">
+        ${taskCount>0?`<span class="badge" style="background:#1A2A4A;color:#A0C4FF;border:1px solid #2A4A8A">✅${taskCount}</span>`:""}
+        ${pieseActive>0?`<span class="badge" style="background:#3A1B00;color:#FF9944;border:1px solid #7A3A00">📦${pieseActive}</span>`:""}
+        <span class="badge" style="background:${sc}22;color:${sc};border:1px solid ${sc}55">${car.status}</span>
+        <span class="card-arrow">${isExp?"▲":"▼"}</span>
+      </div>
+    </div>
+
+    ${isExp ? `
+    <div class="card-body">
+      <div class="divider"></div>
+      <div class="tabs-row">
+        <button class="tab ${tab==="reparatii"?"active":""}" onclick="setTab('${car.id}','reparatii')">🔧 Info</button>
+        <button class="tab ${tab==="tasks"?"active":""}" onclick="setTab('${car.id}','tasks')">✅ Tasks (${(car.tasks||[]).length})</button>
+        <button class="tab ${tab==="piese"?"active":""}" onclick="setTab('${car.id}','piese')">📦 Piese (${(car.piese||[]).length})</button>
+        <button class="tab ${tab==="remindere"?"active":""}" onclick="setTab('${car.id}','remindere')">🔔 (${remCount})</button>
+        <button class="tab ${tab==="jurnal"?"active":""}" onclick="setTab('${car.id}','jurnal')">📝 Istoric (${jurnalCount})</button>
+      </div>
+
+      ${tab==="reparatii" ? renderTabReparatii(car) : ""}
+      ${tab==="tasks" ? renderTabTasks(car) : ""}
+      ${tab==="piese" ? renderTabPiese(car) : ""}
+      ${tab==="remindere" ? renderTabRemindere(car) : ""}
+      ${tab==="jurnal" ? renderTabJurnal(car) : ""}
+
+
+    </div>` : ""}
+  </div>`;
+}
+
+function renderTabReparatii(car) {
+  return `
+  <div class="field-block">
+    <div class="field-label">Reparații necesare</div>
+    <div class="field-value">${car.reparatii||"—"}</div>
+  </div>
+  <div class="field-block">
+    <div class="field-label">Service</div>
+    <div class="field-edit">
+      <input id="s-service-${car.id}" value="${car.service||""}" placeholder="ex: La Erebus" />
+      <button class="btn btn-secondary btn-sm" onclick="updateService('${car.id}')">Salvează</button>
+    </div>
+  </div>
+  <div class="field-block">
+    <div class="field-label">Data estimată finalizare</div>
+    <div class="field-edit">
+      <input type="date" id="s-data-${car.id}" value="${car.dataFinalizare||""}" />
+      <button class="btn btn-secondary btn-sm" onclick="updateData('${car.id}')">Salvează</button>
+    </div>
+  </div>
+  <div class="field-block">
+    <div class="field-label">Status mașină</div>
+    <select onchange="updateStatus('${car.id}',this.value)" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:10px;padding:12px 14px;font-size:16px;outline:none;-webkit-appearance:none">
+      ${Object.keys(CAR_STATUS).map(s=>`<option ${car.status===s?"selected":""}>${s}</option>`).join("")}
+    </select>
+  </div>
+  <div style="border-top:1px solid #0F3460;margin-top:20px;padding-top:16px;">
+    <button class="btn btn-green btn-full" onclick="archiveCar('${car.id}')">📦 Arhivează mașina</button>
+  </div>`;
+}
+
+function renderTabTasks(car) {
+  const userOptions = users.map(u => `<option value="${u.name}" ${newTask.assignedTo===u.name?"selected":""}>${u.name} (${u.role})</option>`).join("");
+  return `
+  <div class="section-box">
+    <div class="section-header">
+      <span class="section-label" style="color:#A0C4FF">✅ Taskuri</span>
+      <button class="btn btn-secondary btn-sm" onclick="toggleTaskForm('${car.id}')">+ Task nou</button>
+    </div>
+    ${showTaskForm===car.id ? `
+    <div class="task-form">
+      <div class="form-group"><label>Descriere task *</label>
+        <textarea id="t-text" rows="2" placeholder="ex: Du mașina la geometrie la Vulcanizare Popescu...">${newTask.text}</textarea>
+      </div>
+      <div class="form-group"><label>Alocat către *</label>
+        <select id="t-assigned">${userOptions||'<option>Niciun user</option>'}</select>
+      </div>
+      <div class="form-group"><label>Data (opțional)</label>
+        <input type="date" id="t-data" value="${newTask.data}" min="${today}" />
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="toggleTaskForm(null)">Anulează</button>
+        <button class="btn btn-primary" onclick="addTask('${car.id}')">Adaugă task</button>
+      </div>
+    </div>` : ""}
+    ${(car.tasks||[]).length===0 ? `<div class="empty-state">Niciun task adăugat</div>` :
+      [...(car.tasks||[])].sort((a,b) => {
+        if (!a.data && !b.data) return 0;
+        if (!a.data) return -1;
+        if (!b.data) return 1;
+        return a.data.localeCompare(b.data);
+      }).map(t => `
+      <div class="task-row ${t.done?'done':''}">
+        <div class="task-header">
+          <div class="task-text ${t.done?'done-text':''}">${t.text}</div>
+          ${!t.done ? `<button class="btn btn-green btn-sm" style="flex-shrink:0" onclick="doneTask('${car.id}',${t.id})">✓ Done</button>` : `<span style="color:#4CAF50;font-size:12px;flex-shrink:0">✅ Gata</span>`}
+        </div>
+        <div class="task-meta">
+          <span class="task-assignee">👤 ${t.assignedTo}</span>
+          ${t.data ? `<span class="todo-date">📅 ${fmt(t.data)}</span>` : `<span class="todo-nodate">📅 Fără dată</span>`}
+          <span>Creat de ${t.createdBy}</span>
+          ${t.doneBy ? `<span>· Finalizat de ${t.doneBy}</span>` : ""}
+        </div>
+        ${!t.done ? `
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+          <input type="date" value="${t.data||""}" min="${today}" onchange="updateTaskDate('${car.id}',${t.id},this.value)" style="flex:1;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:8px;padding:7px 10px;font-size:14px;outline:none" />
+          <button class="btn btn-danger" style="padding:6px 10px;min-height:32px" onclick="deleteTask('${car.id}',${t.id})">✕</button>
+        </div>` : ""}
+        ${renderComments(t.comments||[], `car_${car.id}_${t.id}`)}
+      </div>`).join("")}
+  </div>`;
+}
+
+function renderTabPiese(car) {
+  return `
+  <div class="section-box">
+    <div class="section-header">
+      <span class="section-label" style="color:#A0C4FF">Piese comandate</span>
+      <button class="btn btn-secondary btn-sm" onclick="togglePiesaForm('${car.id}')">+ Adaugă</button>
+    </div>
+    ${showPiesaForm===car.id ? `
+    <div class="inner-form">
+      <div class="form-group" style="margin-bottom:10px"><label>Denumire piesă</label><input id="p-nume" placeholder="ex: Filtru ulei" /></div>
+      <div class="form-group" style="margin-bottom:10px"><label>Status</label>
+        <select id="p-status">${Object.keys(STATUS_COLORS).map(s=>`<option>${s}</option>`).join("")}</select>
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn btn-secondary" onclick="togglePiesaForm(null)">Anulează</button>
+        <button class="btn btn-primary" onclick="addPiesa('${car.id}')">Adaugă</button>
+      </div>
+    </div>` : ""}
+    ${(car.piese||[]).length===0 ? `<div class="empty-state">Nicio piesă adăugată</div>` :
+      (car.piese||[]).map(p => {
+        const sc2 = STATUS_COLORS[p.status]||{bg:"#2A2A2A",text:"#aaa",border:"#444"};
+        return `<div class="piesa-row">
+          <span style="flex:1;font-size:15px;color:#CBD5E0">${p.nume}</span>
+          <select onchange="updatePiesa('${car.id}',${p.id},this.value)" style="background:${sc2.bg};color:${sc2.text};border:1px solid ${sc2.border};border-radius:8px;padding:6px 8px;font-size:12px;font-weight:600;-webkit-appearance:none;outline:none">
+            ${Object.keys(STATUS_COLORS).map(s=>`<option ${p.status===s?"selected":""}>${s}</option>`).join("")}
+          </select>
+          <button class="btn btn-danger" style="padding:6px 10px;min-height:32px" onclick="deletePiesa('${car.id}',${p.id})">✕</button>
+        </div>`;
+      }).join("")}
+  </div>`;
+}
+
+function renderTabRemindere(car) {
+  return `
+  <div class="section-box">
+    <div class="section-header">
+      <span class="section-label" style="color:#4CAF50">🔔 Remindere</span>
+      <button class="btn btn-green btn-sm" onclick="toggleReminderForm('${car.id}')">+ Adaugă</button>
+    </div>
+    ${showReminderForm===car.id ? `
+    <div class="reminder-form">
+      <div class="form-group"><label>Ce ai de făcut?</label>
+        <textarea id="r-text" rows="2" placeholder="ex: Sună-l pe Rafael...">${newReminder.text}</textarea>
+      </div>
+      <div class="date-time-row">
+        <div><div class="field-label">Data</div><input type="date" id="r-data" min="${today}" value="${newReminder.data}" /></div>
+        <div><div class="field-label">Ora</div><input type="time" id="r-ora" value="${newReminder.ora}" /></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="toggleReminderForm(null)">Anulează</button>
+        <button class="btn btn-green" onclick="addReminder('${car.id}','${car.nrInmatriculare}')">🔔 Salvează</button>
+      </div>
+    </div>` : ""}
+    ${(car.remindere||[]).length===0 ? `<div class="empty-state">Niciun reminder</div>` :
+      (car.remindere||[]).map(r => {
+        const isPast = r.data < today;
+        return `<div class="reminder-row">
+          <div style="flex:1">
+            <div style="font-size:14px;color:${isPast?"#4A5568":"#CBD5E0"};text-decoration:${isPast?"line-through":"none"}">${r.text}</div>
+            <div style="font-size:12px;margin-top:4px;color:${isPast?"#3A3A3A":"#4CAF50"}">📅 ${fmt(r.data)} · ${r.ora}${isPast?" · <span style='color:#E94560'>Expirat</span>":""}</div>
+          </div>
+          <button class="btn btn-danger" style="padding:6px 10px;min-height:32px;flex-shrink:0" onclick="deleteReminder('${car.id}',${r.id})">✕</button>
+        </div>`;
+      }).join("")}
+  </div>`;
+}
+
+function renderTabJurnal(car) {
+  return `
+  <div class="section-box">
+    <div class="section-header">
+      <span class="section-label" style="color:#9B8FC7">📝 Istoric</span>
+    </div>
+    <div class="jurnal-input-box">
+      <textarea id="j-text-${car.id}" rows="3" placeholder="Adaugă o notă..."></textarea>
+      <button class="btn btn-primary btn-full" onclick="addJurnal('${car.id}')">+ Adaugă notă</button>
+    </div>
+    ${(car.jurnal||[]).length===0 ? `<div class="empty-state">Nicio înregistrare</div>` :
+      [...(car.jurnal||[])].reverse().map(j => `
+      <div class="jurnal-row">
+        <div class="jurnal-meta">🕐 ${j.dataOra} · <strong>${j.user||"?"}</strong></div>
+        <div class="jurnal-text">${j.text}</div>
+      </div>`).join("")}
+  </div>`;
+}
+
+function renderTodo() {
+  const myTasks = [];
+  // Car tasks
+  cars.filter(c => !c.archived).forEach(car => {
+    (car.tasks||[]).filter(t => !t.done && t.assignedTo === currentUser?.name).forEach(t => {
+      myTasks.push({ ...t, carId: car.id, carNr: car.nrInmatriculare, isGeneral: false });
+    });
+  });
+  // General tasks
+  generalTasks.filter(t => !t.done && t.assignedTo === currentUser?.name).forEach(t => {
+    myTasks.push({ ...t, carNr: null, isGeneral: true });
+  });
+
+  myTasks.sort((a, b) => {
+    if (!a.data && !b.data) return 0;
+    if (!a.data) return -1;
+    if (!b.data) return 1;
+    return a.data.localeCompare(b.data);
+  });
+
+  return `
+  <div style="margin-bottom:16px">
+    <div style="font-family:'Playfair Display',serif;font-size:20px;color:#A0C4FF;margin-bottom:4px">📋 TO DO — ${currentUser?.name}</div>
+    <div style="font-size:13px;color:#718096">${myTasks.length} task${myTasks.length!==1?"uri":""} de rezolvat</div>
+  </div>
+  ${myTasks.length === 0 ? `<div class="empty-state" style="padding:40px 0">🎉<br><br>Nu ai niciun task de rezolvat!</div>` :
+    myTasks.map(t => {
+      const taskKey = t.isGeneral ? `gen_${t.id}` : `car_${t.carId}_${t.id}`;
+      return `
+    <div class="todo-card">
+      ${t.carNr ? `<div class="todo-car-label">🚗 ${t.carNr}</div>` : `<div class="todo-car-label" style="color:#F39C12">➕ Task general</div>`}
+      <div class="todo-text">${t.text}</div>
+      <div class="todo-meta">
+        ${t.data ? `<span class="todo-date">📅 ${fmt(t.data)}</span>` : `<span class="todo-nodate">📅 Fără dată</span>`}
+        <span>De la: ${t.createdBy}</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+        <input type="date" id="todo-data-${taskKey}" value="${t.data||""}" style="flex:1;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:8px;padding:8px 10px;font-size:14px;outline:none" />
+        <button class="btn btn-secondary btn-sm" onclick="saveTodoDate('${taskKey}','${t.isGeneral?'gen':'car'}','${t.isGeneral?(t.docId||t.id):(t.carId+'_'+t.id)}')">📅</button>
+        ${t.isGeneral ?
+          `<button class="btn btn-green btn-sm" onclick="doneGeneralTask(${t.id})">✓ Done</button>` :
+          `<button class="btn btn-green btn-sm" onclick="doneTask('${t.carId}',${t.id})">✓ Done</button>`}
+      </div>
+      ${renderComments(t.comments||[], taskKey)}
+    </div>`;
+    }).join("")}
+  `;
+}
+
+function renderOverview() {
+  const activeCars = cars.filter(c => !c.archived);
+  const byUser = {};
+  // Car tasks
+  activeCars.forEach(car => {
+    (car.tasks||[]).filter(t => !t.done).forEach(t => {
+      if (!byUser[t.assignedTo]) byUser[t.assignedTo] = [];
+      byUser[t.assignedTo].push({ ...t, carNr: car.nrInmatriculare, carId: car.id, isGeneral: false });
+    });
+  });
+  // General tasks
+  generalTasks.filter(t => !t.done).forEach(t => {
+    if (!byUser[t.assignedTo]) byUser[t.assignedTo] = [];
+    byUser[t.assignedTo].push({ ...t, carNr: null, isGeneral: true });
+  });
+
+  const totalTasks = Object.values(byUser).reduce((a, arr) => a + arr.length, 0);
+  const userNames = Object.keys(byUser).sort((a,b) => (byUser[b].length - byUser[a].length));
+
+  return `
+  <div style="margin-bottom:16px">
+    <div style="font-family:'Playfair Display',serif;font-size:20px;color:#A0C4FF;margin-bottom:4px">📊 Overview echipă</div>
+    <div style="font-size:13px;color:#718096">${totalTasks} task${totalTasks!==1?"uri":""} active · ${userNames.length} membri cu taskuri</div>
+  </div>
+  ${totalTasks === 0 ? `<div class="empty-state" style="padding:40px 0">🎉<br><br>Niciun task activ în echipă!</div>` :
+    userNames.map(name => {
+      const tasks = byUser[name];
+      const isExp = expandedUser === name;
+      const sorted = [...tasks.filter(t=>!t.data), ...tasks.filter(t=>t.data).sort((a,b)=>a.data.localeCompare(b.data))];
+      const creators = [...new Set(tasks.map(t => t.createdBy))];
+      return `
+      <div style="background:#16213E;border:1px solid #0F3460;border-radius:14px;margin-bottom:10px;overflow:hidden">
+        <div style="background:#0F2040;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleUser('${name}')">
+          <div>
+            <div style="font-size:16px;font-weight:700;color:#E0E0E0">👤 ${name}</div>
+            <div style="font-size:12px;color:#718096;margin-top:3px">de la: ${creators.join(", ")}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="background:#E94560;color:white;border-radius:20px;padding:3px 12px;font-size:13px;font-weight:700">${tasks.length} task${tasks.length!==1?"uri":""}</span>
+            <span style="color:#4A5568;font-size:16px">${isExp?"▲":"▼"}</span>
+          </div>
+        </div>
+        ${isExp ? `
+        <div style="padding:10px 16px">
+          ${sorted.map(t => {
+            const createdDate = t.createdAt ? new Date(t.createdAt).toLocaleDateString("ro-RO") + " · " + new Date(t.createdAt).toLocaleTimeString("ro-RO",{hour:"2-digit",minute:"2-digit"}) : "—";
+            return `
+          <div style="padding:12px 0;border-bottom:1px solid #1A2A4A;display:flex;align-items:flex-start;gap:10px">
+            <div style="flex:1">
+              <div style="font-size:15px;color:#E0E0E0;line-height:1.4;margin-bottom:8px;font-weight:600">${t.text}</div>
+              <div style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+                <span style="color:#A0C4FF">🚗 ${t.carNr}</span>
+                <span style="color:#9B8FC7">👤 Distribuit de <strong>${t.createdBy}</strong></span>
+                <span style="color:#4A5568">🕐 Creat la: ${createdDate}</span>
+                ${t.data ? `<span style="color:#F39C12;font-weight:600">📅 Scadent: ${fmt(t.data)}</span>` : `<span style="color:#E94560">📅 Fără dată scadentă</span>`}
+              </div>
+            </div>
+            <button class="btn btn-green btn-sm" style="flex-shrink:0;padding:6px 10px;min-height:32px" onclick="doneTask('${t.carId}',${t.id})">✓</button>
+          </div>`;
+          }).join("")}
+        </div>` : ""}
+      </div>`;
+    }).join("")}
+  `;
+}
+
+function renderMyActivity() {
+  const activeCars = cars.filter(c => !c.archived);
+  const byRecipient = {};
+  // Car tasks
+  activeCars.forEach(car => {
+    (car.tasks||[]).filter(t => !t.done && t.createdBy === currentUser?.name).forEach(t => {
+      if (!byRecipient[t.assignedTo]) byRecipient[t.assignedTo] = [];
+      byRecipient[t.assignedTo].push({ ...t, carNr: car.nrInmatriculare, carId: car.id, isGeneral: false });
+    });
+  });
+  // General tasks
+  generalTasks.filter(t => !t.done && t.createdBy === currentUser?.name).forEach(t => {
+    if (!byRecipient[t.assignedTo]) byRecipient[t.assignedTo] = [];
+    byRecipient[t.assignedTo].push({ ...t, carNr: null, isGeneral: true });
+  });
+
+  const totalTasks = Object.values(byRecipient).reduce((a, arr) => a + arr.length, 0);
+  const recipients = Object.keys(byRecipient).sort((a,b) => byRecipient[b].length - byRecipient[a].length);
+
+  return `
+  <div style="margin-bottom:16px">
+    <div style="font-family:'Playfair Display',serif;font-size:20px;color:#F39C12;margin-bottom:4px">📤 My Activity — ${currentUser?.name}</div>
+    <div style="font-size:13px;color:#718096">${totalTasks} task${totalTasks!==1?"uri":""} distribuite de tine · nerezolvate</div>
+  </div>
+  ${totalTasks === 0 ? `<div class="empty-state" style="padding:40px 0">🎉<br><br>Nu ai niciun task distribuit nerezolvat!</div>` :
+    recipients.map(name => {
+      const tasks = byRecipient[name];
+      const isExp = expandedUser === ('my_'+name);
+      const sorted = [...tasks.filter(t=>!t.data), ...tasks.filter(t=>t.data).sort((a,b)=>a.data.localeCompare(b.data))];
+      return `
+      <div style="background:#16213E;border:1px solid #3A2A00;border-radius:14px;margin-bottom:10px;overflow:hidden">
+        <div style="background:#1E1A0A;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleUser('my_${name}')">
+          <div style="font-size:16px;font-weight:700;color:#E0E0E0">👤 ${name}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="background:#F39C12;color:#1A1A00;border-radius:20px;padding:3px 12px;font-size:13px;font-weight:700">${tasks.length} task${tasks.length!==1?"uri":""}</span>
+            <span style="color:#4A5568;font-size:16px">${isExp?"▲":"▼"}</span>
+          </div>
+        </div>
+        ${isExp ? `
+        <div style="padding:10px 16px">
+          ${sorted.map(t => {
+            const createdDate = t.createdAt ? new Date(t.createdAt).toLocaleDateString("ro-RO") + " · " + new Date(t.createdAt).toLocaleTimeString("ro-RO",{hour:"2-digit",minute:"2-digit"}) : "—";
+            const editKey = t.isGeneral ? `gen_${t.id}` : `car_${t.carId}_${t.id}`;
+            return `
+          <div style="padding:12px 0;border-bottom:1px solid #1A2A4A">
+            <div style="font-size:15px;color:#E0E0E0;line-height:1.4;margin-bottom:8px;font-weight:600">${t.text}</div>
+            <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;margin-bottom:10px">
+              ${t.carNr ? `<span style="color:#A0C4FF">🚗 ${t.carNr}</span>` : `<span style="color:#F39C12">➕ Task general</span>`}
+              <span style="color:#4A5568">🕐 Creat la: ${createdDate}</span>
+              ${t.data ? `<span style="color:#F39C12;font-weight:600">📅 Scadent: ${fmt(t.data)}</span>` : `<span style="color:#E94560">📅 Fără dată scadentă</span>`}
+            </div>
+            <div style="background:#0F2040;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:11px;color:#718096;text-transform:uppercase;letter-spacing:0.05em">✏️ Editează task</div>
+              <textarea id="edit-text-${editKey}" rows="2" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:8px;padding:8px 10px;font-size:14px;outline:none;resize:none">${t.text}</textarea>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="date" id="edit-data-${editKey}" value="${t.data||""}" style="flex:1;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:8px;padding:8px 10px;font-size:14px;outline:none" />
+                <button class="btn btn-primary btn-sm" onclick="saveTaskEdit('${editKey}','${t.isGeneral?'gen':'car'}','${t.isGeneral?t.docId||t.id:(t.carId+'_'+t.id)}')">💾 Salvează</button>
+              </div>
+            </div>
+          </div>`;
+          }).join("")}
+        </div>` : ""}
+      </div>`;
+    }).join("")}
+  `;
+}
+
+function renderComments(comments, taskKey) {
+  const isShowing = showCommentForm === taskKey;
+  return `
+  <div style="margin-top:10px;border-top:1px solid #1A2A4A;padding-top:10px">
+    ${(comments||[]).length > 0 ? (comments||[]).map(c => `
+    <div style="background:#0A1628;border-radius:8px;padding:8px 12px;margin-bottom:6px">
+      <div style="font-size:11px;color:#4A5568;margin-bottom:3px">💬 <strong style="color:#A0C4FF">${c.user}</strong> · ${c.dataOra}</div>
+      <div style="font-size:13px;color:#CBD5E0">${c.text}</div>
+    </div>`).join("") : ""}
+    ${isShowing ? `
+    <div style="display:flex;gap:8px;align-items:flex-end;margin-top:6px">
+      <textarea id="comment-input-${taskKey}" rows="2" placeholder="Scrie un comentariu..." style="flex:1;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:8px;padding:8px 10px;font-size:14px;outline:none;resize:none"></textarea>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn btn-primary btn-sm" onclick="addComment('${taskKey}')">Trimite</button>
+        <button class="btn btn-secondary btn-sm" onclick="toggleComment(null)">✕</button>
+      </div>
+    </div>` : `
+    <button style="background:transparent;border:1px dashed #2A4A6A;color:#718096;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;width:100%;margin-top:4px" onclick="toggleComment('${taskKey}')">
+      💬 Adaugă comentariu
+    </button>`}
+  </div>`;
+}
+
+function renderTaskGeneral() {
+  const userOptions = users.map(u => `<option value="${u.name}" ${newGeneralTask.assignedTo===u.name?"selected":""}>${u.name} (${u.role})</option>`).join("");
+  const sorted = [...generalTasks].sort((a,b) => {
+    if (!a.data && !b.data) return 0;
+    if (!a.data) return -1;
+    if (!b.data) return 1;
+    return a.data.localeCompare(b.data);
+  });
+  const active = sorted.filter(t => !t.done);
+  const done = sorted.filter(t => t.done);
+
+  return `
+  <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;color:#A0C4FF">➕ Taskuri generale</div>
+      <div style="font-size:13px;color:#718096;margin-top:3px">${active.length} active · ${done.length} finalizate</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="toggleGeneralTaskForm()">${showGeneralTaskForm?"✕ Anulează":"+ Task nou"}</button>
+  </div>
+
+  ${showGeneralTaskForm ? `
+  <div class="add-form-box" style="margin-bottom:16px">
+    <div class="form-group"><label>Descriere task *</label>
+      <textarea id="gt-text" rows="2" placeholder="ex: Sună la reprezentanță pentru status garanții..."></textarea>
+    </div>
+    <div class="form-group"><label>Alocat către *</label>
+      <select id="gt-assigned">${userOptions||'<option>Niciun user</option>'}</select>
+    </div>
+    <div class="form-group"><label>Data (opțional)</label>
+      <input type="date" id="gt-data" min="${today}" />
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="toggleGeneralTaskForm()">Anulează</button>
+      <button class="btn btn-primary" onclick="addGeneralTask()">Adaugă task</button>
+    </div>
+  </div>` : ""}
+
+  ${active.length === 0 && !showGeneralTaskForm ? `<div class="empty-state" style="padding:30px 0">Niciun task general activ</div>` :
+    active.map(t => renderGeneralTaskCard(t)).join("")}
+
+  ${done.length > 0 ? `
+  <div style="margin-top:20px;margin-bottom:10px;font-size:12px;color:#4A5568;font-weight:700;text-transform:uppercase;letter-spacing:0.05em">✅ Finalizate (${done.length})</div>
+  ${done.map(t => renderGeneralTaskCard(t)).join("")}` : ""}
+  `;
+}
+
+function renderGeneralTaskCard(t) {
+  const taskKey = `gen_${t.id}`;
+  return `
+  <div style="background:#16213E;border:1px solid ${t.done?"#0F2040":"#0F3460"};border-radius:14px;padding:14px 16px;margin-bottom:10px;opacity:${t.done?"0.6":"1"}">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="flex:1">
+        <div style="font-size:15px;color:${t.done?"#4A5568":"#E0E0E0"};font-weight:600;text-decoration:${t.done?"line-through":"none"};line-height:1.4;margin-bottom:6px">${t.text}</div>
+        <div style="display:flex;flex-direction:column;gap:3px;font-size:12px">
+          <span style="color:#A0C4FF">👤 Per: <strong>${t.assignedTo}</strong></span>
+          <span style="color:#9B8FC7">📤 De la: ${t.createdBy}</span>
+          ${t.data ? `<span style="color:#F39C12;font-weight:600">📅 ${fmt(t.data)}</span>` : `<span style="color:#E94560">📅 Fără dată</span>`}
+          ${t.done ? `<span style="color:#27AE60">✅ Finalizat de ${t.doneBy}</span>` : ""}
+        </div>
+      </div>
+      ${!t.done ? `<button class="btn btn-green btn-sm" style="flex-shrink:0" onclick="doneGeneralTask(${t.id})">✓ Done</button>` : ""}
+    </div>
+    ${renderComments(t.comments||[], taskKey)}
+  </div>`;
+}
+
+function renderInventar() {
+  const active = inventarPiese.filter(p => p.status !== "Vândut");
+  const totalValoare = active.reduce((sum, p) => sum + (parseFloat(p.pret) || 0), 0);
+
+  return `
+  <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;color:#CC88FF">🔩 Inventar Piese</div>
+      <div style="font-size:13px;color:#718096;margin-top:3px">${active.length} piese în stoc</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="toggleInventarForm()">${showInventarForm?"✕ Anulează":"+ Piesă nouă"}</button>
+  </div>
+
+  <div style="background:#16213E;border:1px solid #2A1A4A;border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:13px;color:#718096;text-transform:uppercase;letter-spacing:0.05em;font-weight:600">💰 Total valoare stoc</div>
+    <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#4CAF50">${totalValoare.toFixed(2)} RON</div>
+  </div>
+
+  ${showInventarForm ? `
+  <div class="add-form-box" style="border-color:#CC88FF;margin-bottom:16px">
+    <div class="form-group"><label>Nume piesă *</label><input id="inv-nume" placeholder="ex: Filtru ulei Mann" /></div>
+    <div class="form-group"><label>Model mașină *</label><input id="inv-masina" placeholder="ex: Ford Mondeo MK4, 2008-2010" /></div>
+    <div class="form-group"><label>Cod piesă</label><input id="inv-cod" placeholder="ex: W712/75" /></div>
+    <div class="form-group"><label>Preț (RON)</label><input id="inv-pret" type="number" placeholder="ex: 45.00" /></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="toggleInventarForm()">Anulează</button>
+      <button class="btn btn-primary" onclick="addInventarPiesa()">Adaugă</button>
+    </div>
+  </div>` : ""}
+
+  ${active.length === 0 && !showInventarForm ? `<div class="empty-state" style="padding:30px 0">🔩<br><br>Nicio piesă în inventar</div>` :
+    active.map(p => `
+    <div style="background:#16213E;border:1px solid #2A1A4A;border-radius:14px;padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:700;color:#E0E0E0;margin-bottom:6px">${p.nume}</div>
+          <div style="display:flex;flex-direction:column;gap:3px;font-size:13px">
+            <span style="color:#A0C4FF">🚗 ${p.masina||"—"}</span>
+            ${p.cod?`<span style="color:#718096">🔖 Cod: ${p.cod}</span>`:""}
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              <span style="color:#4CAF50;font-weight:700;font-size:15px">💰 ${p.pret ? p.pret+" RON" : "—"}</span>
+              <input type="number" placeholder="Modifică preț" id="pret-${p.docId}" style="width:100px;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:6px;padding:5px 8px;font-size:13px;outline:none" />
+              <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;min-height:30px" onclick="updateInventarPret('${p.docId}')">💾</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          <span style="background:#1B4332;color:#4CAF50;border:1px solid #4CAF50;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600">${p.status}</span>
+          <button class="btn btn-danger" style="font-size:11px;padding:4px 10px;min-height:28px" onclick="vandutInventar('${p.docId}')">✓ Vândut</button>
+        </div>
+      </div>
+    </div>`).join("")}
+  `;
+}
+
+function renderArhiva() {
+  const archived = cars.filter(c => c.archived);
+  const filtered = archived.filter(c =>
+    c.nrInmatriculare?.toLowerCase().includes(archiveSearch.toLowerCase()) ||
+    c.service?.toLowerCase().includes(archiveSearch.toLowerCase()) ||
+    c.reparatii?.toLowerCase().includes(archiveSearch.toLowerCase())
+  );
+  const doneGeneralTasks = generalTasks.filter(t => t.done).filter(t =>
+    t.text?.toLowerCase().includes(archiveSearch.toLowerCase()) ||
+    t.assignedTo?.toLowerCase().includes(archiveSearch.toLowerCase()) ||
+    t.createdBy?.toLowerCase().includes(archiveSearch.toLowerCase())
+  ).sort((a,b) => (b.doneAt||0) - (a.doneAt||0));
+
+  const vandutePiese = inventarPiese.filter(p => p.status === "Vândut").filter(p =>
+    p.nume?.toLowerCase().includes(archiveSearch.toLowerCase()) ||
+    p.masina?.toLowerCase().includes(archiveSearch.toLowerCase()) ||
+    p.cod?.toLowerCase().includes(archiveSearch.toLowerCase())
+  );
+
+  const showMasini = arhivaFilter === "toate" || arhivaFilter === "masini";
+  const showTaskuri = arhivaFilter === "toate" || arhivaFilter === "taskuri";
+  const showPiese = arhivaFilter === "toate" || arhivaFilter === "piese";
+
+  return `
+  <div style="margin-bottom:16px">
+    <div style="font-family:'Playfair Display',serif;font-size:20px;color:#718096;margin-bottom:12px">📦 Arhivă</div>
+    <input class="search-box" placeholder="🔍 Caută..." value="${archiveSearch}" oninput="searchArchive(this.value)" />
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      ${["toate","masini","taskuri","piese"].map(f => `
+      <button onclick="setArhivaFilter('${f}')" style="padding:7px 14px;border-radius:8px;border:1px solid ${arhivaFilter===f?'#E94560':'#0F3460'};background:${arhivaFilter===f?'#E94560':'#16213E'};color:${arhivaFilter===f?'white':'#718096'};font-size:12px;font-weight:600;cursor:pointer">
+        ${f==='toate'?'🗂 Toate':f==='masini'?'🚗 Mașini':f==='taskuri'?'✅ Taskuri':'🔩 Piese'}
+      </button>`).join("")}
+    </div>
+  </div>
+
+  ${showMasini && filtered.length > 0 ? `
+  <div style="font-size:12px;color:#718096;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">🚗 Mașini arhivate (${filtered.length})</div>
+  ${filtered.map(car => `
+  <div class="archive-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:18px;color:#CBD5E0">${car.nrInmatriculare}</div>
+        ${car.service?`<div style="font-size:13px;color:#A0C4FF;margin-top:2px">📍 ${car.service}</div>`:""}
+        <div style="font-size:12px;color:#4A5568;margin-top:4px">${(car.tasks||[]).length} task-uri · ${(car.jurnal||[]).length} note</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="toggleCar('${car.id}')">${expandedCar===car.id?"▲":"▼ Detalii"}</button>
+    </div>
+    ${expandedCar===car.id ? `
+    <div style="margin-top:14px;border-top:1px solid #0F3460;padding-top:14px">
+      ${car.reparatii?`<div style="font-size:13px;color:#CBD5E0;margin-bottom:10px">🔧 ${car.reparatii}</div>`:""}
+      ${(car.tasks||[]).length > 0 ? `
+      <div style="font-size:12px;color:#718096;margin-bottom:8px;font-weight:600;text-transform:uppercase">✅ Taskuri</div>
+      ${(car.tasks||[]).map(t=>`
+      <div style="padding:8px 0;border-bottom:1px solid #1A2A4A;font-size:13px">
+        <div style="color:${t.done?"#4A5568":"#CBD5E0"};text-decoration:${t.done?"line-through":"none"}">${t.text}</div>
+        <div style="color:#4A5568;font-size:11px;margin-top:2px">👤 ${t.assignedTo} · de la ${t.createdBy}${t.doneBy?" · ✅ "+t.doneBy:""}</div>
+      </div>`).join("")}` : ""}
+      <div style="font-size:12px;color:#718096;margin-top:10px;margin-bottom:8px;font-weight:600;text-transform:uppercase">📝 Istoric</div>
+      ${(car.jurnal||[]).length===0?`<div class="empty-state">Niciun istoric</div>`:
+        [...(car.jurnal||[])].reverse().slice(0,10).map(j=>`
+        <div style="padding:8px 0;border-bottom:1px solid #1A2A4A;font-size:13px">
+          <div style="color:#4A5568;font-size:11px">${j.dataOra} · ${j.user||"?"}</div>
+          <div style="color:#CBD5E0;margin-top:3px">${j.text}</div>
+        </div>`).join("")}
+    </div>` : ""}
+  </div>`).join("")}` : ""}
+
+  ${showTaskuri && doneGeneralTasks.length > 0 ? `
+  <div style="font-size:12px;color:#718096;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-top:16px;margin-bottom:10px">✅ Taskuri generale finalizate (${doneGeneralTasks.length})</div>
+  ${doneGeneralTasks.map(t => `
+  <div class="archive-card" style="opacity:0.8">
+    <div style="font-size:15px;color:#718096;text-decoration:line-through;margin-bottom:6px">${t.text}</div>
+    <div style="display:flex;flex-direction:column;gap:3px;font-size:12px">
+      <span style="color:#A0C4FF">👤 ${t.assignedTo}</span>
+      <span style="color:#9B8FC7">📤 De la: ${t.createdBy}</span>
+      ${t.doneBy?`<span style="color:#27AE60">✅ ${t.doneBy}</span>`:""}
+      ${t.doneAt?`<span style="color:#4A5568">🕐 ${new Date(t.doneAt).toLocaleDateString("ro-RO")}</span>`:""}
+    </div>
+  </div>`).join("")}` : ""}
+
+  ${showPiese && vandutePiese.length > 0 ? `
+  <div style="font-size:12px;color:#718096;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-top:16px;margin-bottom:10px">🔩 Piese vândute (${vandutePiese.length})</div>
+  ${vandutePiese.map(p => `
+  <div class="archive-card" style="opacity:0.8">
+    <div style="font-size:15px;color:#718096;text-decoration:line-through;margin-bottom:6px">${p.nume}</div>
+    <div style="display:flex;flex-direction:column;gap:3px;font-size:12px">
+      ${p.masina?`<span style="color:#A0C4FF">🚗 ${p.masina}</span>`:""}
+      ${p.cod?`<span style="color:#718096">🔖 ${p.cod}</span>`:""}
+      ${p.pret?`<span style="color:#4CAF50">💰 ${p.pret} RON</span>`:""}
+      ${p.vandutAt?`<span style="color:#4A5568">🕐 ${new Date(p.vandutAt).toLocaleDateString("ro-RO")}</span>`:""}
+    </div>
+  </div>`).join("")}` : ""}
+
+  ${filtered.length===0 && doneGeneralTasks.length===0 && vandutePiese.length===0 ?
+    `<div class="empty-state">Nicio înregistrare arhivată${archiveSearch?" pentru această căutare":""}</div>` : ""}
+  `;
+}
+
+// PIN database
+const ADMIN_PINS = ['400894','411932','871987','562031','118273','528165','990822','236769','184287','578978','441384','767598','127029','686392','529875','250873','434592','963199','282221','254767'];
+const SOFER_PINS = ['229323','275083','910946','860543','838651','108302','604414','844537','145314','619494','633739','539932','624792','469185','797695','642384','202760','565540','250916','348549','990370','369940','185714','241588','980182','840930','562825','262707','610551','418113','411388','432793','531279','372548','643478','513215','428356','975210','453505','419838'];
+
+function getRoleFromPin(pin) {
+  if (ADMIN_PINS.includes(pin)) return 'Admin';
+  if (SOFER_PINS.includes(pin)) return 'Șofer';
+  return null;
+}
+
+function renderProfile(errorMsg) {
+  errorMsg = errorMsg || "";
+  document.getElementById("app").innerHTML = `
+  <div class="profile-screen">
+    <div class="profile-box">
+      <div style="font-size:48px;margin-bottom:16px">🔧</div>
+      <div style="font-family:'Playfair Display',serif;font-size:24px;color:#E94560;margin-bottom:8px">Service CarHunt</div>
+      <div style="color:#718096;font-size:14px;margin-bottom:24px">Introdu PIN-ul primit de la administrator</div>
+      <div class="form-group">
+        <label>PIN (6 cifre)</label>
+        <input id="p-pin" type="tel" inputmode="numeric" placeholder="••••••" maxlength="6" style="text-align:center;font-size:28px;letter-spacing:0.3em;font-weight:700" />
+      </div>
+      <div id="name-section" style="display:none">
+        <div class="form-group">
+          <label>Numele tău</label>
+          <input id="p-name" placeholder="ex: Adrian" style="text-align:center" />
+        </div>
+      </div>
+      ${errorMsg ? `<div style="color:#E94560;font-size:13px;text-align:center;margin:0 0 12px">⚠️ ${errorMsg}</div>` : ""}
+      <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="checkPin()">Continuă →</button>
+    </div>
+  </div>`;
+}
+
+function showSettings() {
+  const isAdmin = currentUser?.role === 'Admin';
+
+  // Build PIN list from registeredPins (loaded from Firebase)
+  const pinRows = registeredPins.map(p => {
+    const isActive = !p.disabled;
+    return `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1A2A4A">
+      <div style="flex:1">
+        <div style="font-size:14px;color:${isActive?"#E0E0E0":"#4A5568"};font-weight:600">${p.name || "Neînregistrat"}</div>
+        <div style="font-size:12px;color:#4A5568;margin-top:2px">PIN: ${p.pin} · ${p.role} ${p.lastSeen ? "· Ultima logare: "+new Date(p.lastSeen).toLocaleDateString("ro-RO") : ""}</div>
+      </div>
+      <span style="font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;background:${isActive?"#1B4332":"#3A1A1A"};color:${isActive?"#4CAF50":"#E94560"}">${isActive?"Activ":"Dezactivat"}</span>
+      <button class="btn btn-sm" style="padding:6px 12px;font-size:12px;background:${isActive?"#3A1A1A":"#1B4332"};color:${isActive?"#E94560":"#4CAF50"};border:1px solid ${isActive?"#E94560":"#4CAF50"}" onclick="togglePin('${p.pin}',${isActive})">
+        ${isActive?"Dezactivează":"Reactivează"}
+      </button>
+    </div>`;
+  }).join("");
+
+  const html = `
+  <div class="add-form-box" style="border-color:#F39C12">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;color:#F39C12;margin-bottom:16px">⚙️ Setări</div>
+    <div style="font-size:13px;color:#718096;margin-bottom:14px;font-weight:600;text-transform:uppercase">Alerte SLA</div>
+    <div class="sla-row">
+      <div class="sla-label">⚠️ Alertă galbenă după</div>
+      <input class="sla-input" id="sla-yellow" type="number" value="${settings.slaYellow}" min="1" />
+      <div style="font-size:13px;color:#718096">zile</div>
+    </div>
+    <div class="sla-row">
+      <div class="sla-label">🚨 Alertă roșie după</div>
+      <input class="sla-input" id="sla-red" type="number" value="${settings.slaRed}" min="1" />
+      <div style="font-size:13px;color:#718096">zile</div>
+    </div>
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn btn-secondary" onclick="render()">Anulează</button>
+      <button class="btn btn-orange" onclick="saveSettings()">Salvează setări</button>
+    </div>
+
+    ${isAdmin ? `
+    <div style="border-top:1px solid #0F3460;margin-top:20px;padding-top:16px">
+      <div style="font-size:13px;color:#718096;margin-bottom:14px;font-weight:600;text-transform:uppercase">🔐 Gestionare acces PIN-uri</div>
+      ${registeredPins.length === 0 ?
+        `<div style="color:#4A5568;font-size:13px;text-align:center;padding:12px 0">Niciun PIN înregistrat încă</div>` :
+        pinRows}
+    </div>` : ""}
+
+    <div style="border-top:1px solid #0F3460;margin-top:20px;padding-top:16px">
+      <div style="font-size:13px;color:#718096;margin-bottom:12px;font-weight:600;text-transform:uppercase">Contul meu</div>
+      <div style="font-size:14px;color:#CBD5E0;margin-bottom:12px">👤 ${currentUser?.name} · ${currentUser?.role}</div>
+      <button class="btn btn-danger btn-full" onclick="logout()">Schimbă utilizatorul</button>
+    </div>
+  </div>`;
+
+  document.getElementById("app").innerHTML = `
+    <div class="header-row">
+      <div class="header-left">
+        <div class="header-title">🔧 Service Auto</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="render()">← Înapoi</button>
+    </div>
+    ${html}`;
+}
+
+// ===== ACTIONS =====
+window.changePage = (p) => { page = p; expandedCar = null; render(); };
+window.toggleForm = () => { showForm = !showForm; render(); };
+window.toggleCar = (id) => { expandedCar = expandedCar === id ? null : id; render(); };
+window.setTab = (id, tab) => { activeTab[id] = tab; render(); };
+window.togglePiesaForm = (id) => { showPiesaForm = id; newPiesa = { nume: "", status: "Comandat" }; render(); };
+window.toggleReminderForm = (id) => { showReminderForm = id; newReminder = { text: "", data: "", ora: "09:00" }; render(); };
+window.toggleTaskForm = (id) => { showTaskForm = id; newTask = { text: "", data: "", assignedTo: users[0]?.name || "" }; render(); };
+window.searchArchive = (v) => { archiveSearch = v; render(); };
+window.toggleUser = (name) => { expandedUser = expandedUser === name ? null : name; render(); };
+window.setArhivaFilter = (f) => { arhivaFilter = f; render(); };
+window.toggleInventarForm = () => { showInventarForm = !showInventarForm; render(); };
+
+window.addInventarPiesa = async () => {
+  const nume = document.getElementById("inv-nume")?.value?.trim();
+  const masina = document.getElementById("inv-masina")?.value?.trim();
+  if (!nume || !masina) { showToast("⚠️ Completează numele și modelul mașinii!"); return; }
+  await addDoc(collection(db, "inventar"), {
+    nume,
+    masina,
+    cod: document.getElementById("inv-cod")?.value || "",
+    pret: document.getElementById("inv-pret")?.value || "",
+    status: "În stoc",
+    createdBy: currentUser?.name,
+    createdAt: Date.now()
+  });
+  showInventarForm = false;
+  showToast("🔩 Piesă adăugată în inventar!");
+};
+
+window.updateInventarPret = async (docId) => {
+  const pret = document.getElementById(`pret-${docId}`)?.value || "";
+  await updateDoc(doc(db, "inventar", docId), { pret });
+  showToast("💰 Preț actualizat!");
+};
+
+window.vandutInventar = async (docId) => {
+  if (!confirm("Marchezi piesa ca Vândută? Va merge în Arhivă.")) return;
+  await updateDoc(doc(db, "inventar", docId), { status: "Vândut", vandutAt: Date.now(), vandutDe: currentUser?.name });
+  showToast("✅ Piesă marcată ca Vândută!");
+};
+window.showSettings = showSettings;
+
+window.togglePin = async (pin, isActive) => {
+  await setDoc(doc(db, "pins", pin), { disabled: isActive }, { merge: true });
+  showToast(isActive ? "🔒 Acces dezactivat!" : "✅ Acces reactivat!");
+  showSettings();
+};
+
+window.checkPin = async () => {
+  const pin = document.getElementById("p-pin")?.value?.trim();
+  if (!pin || pin.length !== 6) { renderProfile("PIN-ul trebuie să aibă exact 6 cifre"); return; }
+  const role = getRoleFromPin(pin);
+  if (!role) { renderProfile("PIN invalid. Contactează administratorul."); return; }
+
+  // Check if PIN already has a user in Firebase
+  try {
+    const pinDoc = await getDoc(doc(db, "pins", pin));
+    if (pinDoc.exists()) {
+      const data = pinDoc.data();
+      // Check if disabled
+      if (data.disabled) { renderProfile("Accesul tău a fost dezactivat. Contactează administratorul."); return; }
+      // PIN already registered — log in directly
+      currentUser = { name: data.name, role: data.role, pin };
+      localStorage.setItem("sa_user", JSON.stringify(currentUser));
+      await setDoc(doc(db, "users", data.name), { name: data.name, role: data.role, pin, lastSeen: Date.now() });
+      await setDoc(doc(db, "pins", pin), { lastSeen: Date.now() }, { merge: true });
+      render();
+      return;
+    }
+  } catch(e) {}
+
+  // PIN not registered yet — ask for name
+  const nameSection = document.getElementById("name-section");
+  if (nameSection) {
+    nameSection.style.display = "block";
+    document.querySelector("#name-section label").textContent = `Bun venit! Cum te cheamă? (Rol: ${role})`;
+  }
+  const btn = document.querySelector(".profile-box .btn-primary");
+  if (btn) { btn.textContent = "Intră în aplicație →"; btn.onclick = () => finalizeProfile(pin, role); }
+};
+
+window.finalizeProfile = async (pin, role) => {
+  const name = document.getElementById("p-name")?.value?.trim();
+  if (!name) { renderProfile("Introdu numele tău"); return; }
+  // Save PIN → name association in Firebase
+  await setDoc(doc(db, "pins", pin), { name, role, createdAt: Date.now() });
+  await setDoc(doc(db, "users", name), { name, role, pin, lastSeen: Date.now() });
+  currentUser = { name, role, pin };
+  localStorage.setItem("sa_user", JSON.stringify(currentUser));
+  render();
+};
+
+window.logout = () => {
+  localStorage.removeItem("sa_user");
+  currentUser = null;
+  render();
+};
+
+window.saveSettings = async () => {
+  const y = parseInt(document.getElementById("sla-yellow")?.value) || 15;
+  const r = parseInt(document.getElementById("sla-red")?.value) || 30;
+  settings = { slaYellow: y, slaRed: r };
+  await setDoc(doc(db, "settings", "sla"), settings);
+  showToast("⚙️ Setări salvate!");
+  render();
+};
+
+window.addCar = async () => {
+  const nr = document.getElementById("f-nr")?.value?.trim();
+  if (!nr) return;
+  await addDoc(collection(db, "masini"), {
+    nrInmatriculare: nr,
+    vin: document.getElementById("f-vin")?.value || "",
+    service: document.getElementById("f-service")?.value || "",
+    status: document.getElementById("f-status")?.value || "În așteptare",
+    dataFinalizare: document.getElementById("f-data")?.value || "",
+    reparatii: document.getElementById("f-rep")?.value || "",
+    piese: [], remindere: [], jurnal: [], tasks: [],
+    createdAt: Date.now(), createdBy: currentUser?.name,
+    archived: false
+  });
+  showForm = false;
+  showToast("✅ Mașină adăugată!");
+};
+
+window.deleteCar = async (id) => {
+  if (!confirm("Ștergi definitiv această mașină?")) return;
+  await deleteDoc(doc(db, "masini", id));
+  if (expandedCar === id) expandedCar = null;
+  showToast("🗑 Mașină ștearsă");
+};
+
+window.archiveCar = async (id) => {
+  if (!confirm("Arhivezi această mașină? Va dispărea din lista activă.")) return;
+  const car = cars.find(c => c.id === id);
+  const jurnal = addLog(car, `Mașina arhivată de ${currentUser?.name}`);
+  await updateDoc(doc(db, "masini", id), { archived: true, archivedAt: Date.now(), jurnal });
+  if (expandedCar === id) expandedCar = null;
+  showToast("📦 Mașină arhivată!");
+};
+
+window.updateStatus = async (id, status) => {
+  const car = cars.find(c => c.id === id);
+  const jurnal = addLog(car, `Status schimbat în "${status}"`);
+  await updateDoc(doc(db, "masini", id), { status, jurnal });
+};
+
+window.updateService = async (carId) => {
+  const service = document.getElementById(`s-service-${carId}`)?.value?.trim() || "";
+  const car = cars.find(c => c.id === carId);
+  const jurnal = addLog(car, `Service actualizat: "${service}"`);
+  await updateDoc(doc(db, "masini", carId), { service, jurnal });
+  showToast("📍 Service actualizat!");
+};
+
+window.updateData = async (carId) => {
+  const dataFinalizare = document.getElementById(`s-data-${carId}`)?.value || "";
+  const car = cars.find(c => c.id === carId);
+  const jurnal = addLog(car, `Data estimată schimbată în ${fmt(dataFinalizare)}`);
+  await updateDoc(doc(db, "masini", carId), { dataFinalizare, jurnal });
+  showToast("📅 Dată actualizată!");
+};
+
+window.addPiesa = async (carId) => {
+  const nume = document.getElementById("p-nume")?.value?.trim();
+  const status = document.getElementById("p-status")?.value || "Comandat";
+  if (!nume) return;
+  const car = cars.find(c => c.id === carId);
+  const piese = [...(car.piese || []), { id: Date.now(), nume, status }];
+  const jurnal = addLog(car, `Piesă adăugată: "${nume}" (${status})`);
+  await updateDoc(doc(db, "masini", carId), { piese, jurnal });
+  showPiesaForm = null;
+  showToast("✅ Piesă adăugată!");
+};
+
+window.updatePiesa = async (carId, piesaId, status) => {
+  const car = cars.find(c => c.id === carId);
+  const piesa = (car.piese||[]).find(p => p.id == piesaId);
+  const piese = (car.piese || []).map(p => p.id == piesaId ? { ...p, status } : p);
+  const jurnal = addLog(car, `Piesă "${piesa?.nume}" → ${status}`);
+  await updateDoc(doc(db, "masini", carId), { piese, jurnal });
+};
+
+window.deletePiesa = async (carId, piesaId) => {
+  const car = cars.find(c => c.id === carId);
+  const piese = (car.piese || []).filter(p => p.id != piesaId);
+  await updateDoc(doc(db, "masini", carId), { piese });
+};
+
+window.saveTodoDate = async (taskKey, type, id) => {
+  const data = document.getElementById(`todo-data-${taskKey}`)?.value || "";
+  if (type === 'gen') {
+    const task = generalTasks.find(t => t.docId === id || String(t.id) === String(id));
+    if (!task) return;
+    await updateDoc(doc(db, "general_tasks", task.docId), { data });
+  } else {
+    const parts = id.split('_');
+    const carId = parts[0];
+    const taskId = parseInt(parts[1]);
+    const car = cars.find(c => c.id === carId);
+    if (!car) return;
+    const tasks = (car.tasks||[]).map(t => t.id == taskId ? { ...t, data } : t);
+    const jurnal = addLog(car, `Data task schimbată de ${currentUser?.name} la ${fmt(data)||"fără dată"}`);
+    await updateDoc(doc(db, "masini", carId), { tasks, jurnal });
+  }
+  showToast("📅 Dată actualizată!");
+};
+
+window.saveTaskEdit = async (editKey, type, id) => {
+  const text = document.getElementById(`edit-text-${editKey}`)?.value?.trim();
+  const data = document.getElementById(`edit-data-${editKey}`)?.value || "";
+  if (!text) return;
+
+  if (type === 'gen') {
+    const task = generalTasks.find(t => t.docId === id || String(t.id) === String(id));
+    if (!task) return;
+    await updateDoc(doc(db, "general_tasks", task.docId), { text, data });
+  } else {
+    const parts = id.split('_');
+    const carId = parts[0];
+    const taskId = parseInt(parts[1]);
+    const car = cars.find(c => c.id === carId);
+    if (!car) return;
+    const tasks = (car.tasks||[]).map(t => t.id == taskId ? { ...t, text, data } : t);
+    const jurnal = addLog(car, `Task editat de ${currentUser?.name}: "${text}"`);
+    await updateDoc(doc(db, "masini", carId), { tasks, jurnal });
+  }
+  showToast("💾 Task actualizat!");
+};
+
+window.toggleGeneralTaskForm = () => { showGeneralTaskForm = !showGeneralTaskForm; newGeneralTask = { text: "", data: "", assignedTo: users[0]?.name || "" }; render(); };
+window.toggleComment = (key) => { showCommentForm = key; commentText = ""; render(); };
+
+window.addGeneralTask = async () => {
+  const text = document.getElementById("gt-text")?.value?.trim();
+  const assignedTo = document.getElementById("gt-assigned")?.value;
+  const data = document.getElementById("gt-data")?.value || "";
+  if (!text || !assignedTo) return;
+  const task = { id: Date.now(), text, assignedTo, data, done: false, createdBy: currentUser?.name, createdAt: Date.now(), comments: [] };
+  await addDoc(collection(db, "general_tasks"), task);
+  showGeneralTaskForm = false;
+  showToast("✅ Task adăugat!");
+};
+
+window.doneGeneralTask = async (taskId) => {
+  const task = generalTasks.find(t => t.id == taskId);
+  if (!task) return;
+  await updateDoc(doc(db, "general_tasks", task.docId), { done: true, doneBy: currentUser?.name, doneAt: Date.now() });
+  showToast("✅ Task finalizat!");
+};
+
+window.addComment = async (taskKey) => {
+  const text = document.getElementById(`comment-input-${taskKey}`)?.value?.trim();
+  if (!text) return;
+  const now = new Date();
+  const dataOra = now.toLocaleDateString("ro-RO") + " · " + now.toLocaleTimeString("ro-RO", {hour:"2-digit",minute:"2-digit"});
+  const comment = { id: Date.now(), text, user: currentUser?.name, dataOra };
+
+  if (taskKey.startsWith("gen_")) {
+    const taskId = parseInt(taskKey.replace("gen_", ""));
+    const task = generalTasks.find(t => t.id == taskId);
+    if (!task) return;
+    const comments = [...(task.comments||[]), comment];
+    await updateDoc(doc(db, "general_tasks", task.docId), { comments });
+  } else {
+    // car_carId_taskId
+    const parts = taskKey.replace("car_", "").split("_");
+    const carId = parts[0];
+    const taskId = parseInt(parts[1]);
+    const car = cars.find(c => c.id === carId);
+    if (!car) return;
+    const tasks = (car.tasks||[]).map(t => t.id == taskId ? { ...t, comments: [...(t.comments||[]), comment] } : t);
+    await updateDoc(doc(db, "masini", carId), { tasks });
+  }
+  showCommentForm = null;
+  showToast("💬 Comentariu adăugat!");
+};
+
+window.addTask = async (carId) => {
+  const text = document.getElementById("t-text")?.value?.trim();
+  const assignedTo = document.getElementById("t-assigned")?.value;
+  const data = document.getElementById("t-data")?.value || "";
+  if (!text || !assignedTo) return;
+  const car = cars.find(c => c.id === carId);
+  const task = { id: Date.now(), text, assignedTo, data, done: false, createdBy: currentUser?.name, createdAt: Date.now() };
+  const tasks = [...(car.tasks || []), task];
+  const jurnal = addLog(car, `Task creat pentru ${assignedTo}: "${text}"${data?" · "+fmt(data):""}`);
+  await updateDoc(doc(db, "masini", carId), { tasks, jurnal });
+  showTaskForm = null;
+  showToast("✅ Task adăugat!");
+};
+
+window.doneTask = async (carId, taskId) => {
+  const car = cars.find(c => c.id === carId);
+  const tasks = (car.tasks || []).map(t => t.id == taskId ? { ...t, done: true, doneBy: currentUser?.name, doneAt: Date.now() } : t);
+  const task = (car.tasks||[]).find(t => t.id == taskId);
+  const jurnal = addLog(car, `Task finalizat de ${currentUser?.name}: "${task?.text}"`);
+  await updateDoc(doc(db, "masini", carId), { tasks, jurnal });
+  showToast("✅ Task marcat ca finalizat!");
+};
+
+window.updateTaskDate = async (carId, taskId, data) => {
+  const car = cars.find(c => c.id === carId);
+  const tasks = (car.tasks || []).map(t => t.id == taskId ? { ...t, data } : t);
+  const task = (car.tasks||[]).find(t => t.id == taskId);
+  const jurnal = addLog(car, `Data task "${task?.text}" schimbată în ${fmt(data)}`);
+  await updateDoc(doc(db, "masini", carId), { tasks, jurnal });
+  showToast("📅 Dată task actualizată!");
+};
+
+window.deleteTask = async (carId, taskId) => {
+  const car = cars.find(c => c.id === carId);
+  const tasks = (car.tasks || []).filter(t => t.id != taskId);
+  await updateDoc(doc(db, "masini", carId), { tasks });
+};
+
+window.addReminder = async (carId) => {
+  const text = document.getElementById("r-text")?.value?.trim();
+  const data = document.getElementById("r-data")?.value;
+  const ora = document.getElementById("r-ora")?.value;
+  if (!text || !data) return;
+  const car = cars.find(c => c.id === carId);
+  const remindere = [...(car.remindere || []), { id: Date.now(), text, data, ora }];
+  await updateDoc(doc(db, "masini", carId), { remindere });
+  showReminderForm = null;
+  showToast(`🔔 Reminder pentru ${fmt(data)} la ${ora}!`);
+};
+
+window.deleteReminder = async (carId, remId) => {
+  const car = cars.find(c => c.id === carId);
+  const remindere = (car.remindere || []).filter(r => r.id != remId);
+  await updateDoc(doc(db, "masini", carId), { remindere });
+};
+
+window.addJurnal = async (carId) => {
+  const text = document.getElementById(`j-text-${carId}`)?.value?.trim();
+  if (!text) return;
+  const car = cars.find(c => c.id === carId);
+  const jurnal = addLog(car, text);
+  await updateDoc(doc(db, "masini", carId), { jurnal });
+  showToast("📝 Notă adăugată!");
+};
+
+// ===== FIRESTORE LISTENERS =====
+onSnapshot(collection(db, "inventar"), snap => {
+  inventarPiese = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+  inventarPiese.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  render();
+});
+
+onSnapshot(collection(db, "general_tasks"), snap => {
+  generalTasks = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+  generalTasks.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  render();
+});
+
+onSnapshot(collection(db, "masini"), snap => {
+  cars = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  cars.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  render();
+});
+
+onSnapshot(collection(db, "users"), snap => {
+  users = snap.docs.map(d => d.data());
+});
+
+// ===== VULCANIZARE MODULE =====
+let vulcPage = 'flota';
+let vulcShowSchimb = null;
+let flota = [];
+let stocAnvelope = [];
+let stocCasate = [];
+let stocJante = [];
+let istoricVulc = [];
+let marci = [];
+let modele = [];
+let dimensiuni = [];
+let filterTip = "toate";
+let filterDim = "";
+let searchFlota = "";
+let showAddMasina = false;
+let showAddStoc = false;
+let showAddJanta = false;
+let showSchimbModal = null;
+let expandedMasina = null;
+let newMasina = { nr: "", marca: "", model: "", tipFata: "Vara", dimFata: "", diferitSpateFata: false, tipSpate: "Vara", dimSpate: "" };
+window.schimbData = { tipMontat: "Vara", dimMontat: "", cantMontat: 4, cantDepozitat: 4, motivCasare: "", altaDimensiune: false };
+const TIPURI = ["Vara", "Iarna", "All Season"];
+
+function fmtDim(d) {
+  if (!d) return "—";
+  if (typeof d === "string") return d;
+  return `${d.lat}/${d.profil} R${d.diam}${d.c?"C":""}`;
+}
+
+function tipClass(tip) {
+  if (!tip) return "";
+  if (tip === "Iarna") return "tip-iarna";
+  if (tip === "Vara") return "tip-vara";
+  return "tip-allseason";
+}
+
+function tipEmoji(tip) {
+  if (tip === "Iarna") return "❄️";
+  if (tip === "Vara") return "☀️";
+  return "🌿";
+}
+
+function nowStr() {
+  const now = new Date();
+  return now.toLocaleDateString("ro-RO") + " · " + now.toLocaleTimeString("ro-RO", {hour:"2-digit",minute:"2-digit"});
+}
+
+async function addIstoric(actiune, masina) {
+  masina = masina || "";
+  await addDoc(collection(db, "vulc_istoric"), {
+    actiune, masina, operator: currentUser.name, data: nowStr(), createdAt: Date.now()
+  });
+}
+
+
+
+
+
+
+// ===== RENDER =====
+function renderVulcanizare() {
+  if (!currentUser) { render(); return ""; }
+
+  const isAdmin = currentUser.role === "Admin";
+
+  return `
+    <div class="header-row">
+      <div style="flex:1;min-width:0">
+        <div class="header-title" style="color:#F39C12">🔄 Vulcanizare</div>
+        <div class="header-sub"><span class="sync-dot"></span> Live · <span class="user-chip">👤 ${currentUser.name} · ${currentUser.role}</span></div>
+      </div>
+      <div style="display:flex;gap:6px">
+        ${isAdmin ? `<button class="btn btn-sm btn-secondary" onclick="changeVulcPage('setari')" style="${vulcPage==='setari'?'background:#F39C12;color:#1A1A00':''}">⚙️</button>` : ""}
+        <button class="btn btn-sm btn-secondary" onclick="changePage('masini')">← Service</button>
+      </div>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="nav-tab ${vulcPage==='flota'?'active':''}" onclick="changeVulcPage('flota')">🚗 Flotă (${flota.length})</button>
+      <button class="nav-tab ${vulcPage==='stoc'?'active':''}" onclick="changeVulcPage('stoc')">📦 Stoc Depozit</button>
+      <button class="nav-tab ${vulcPage==='sezon'?'active':''}" onclick="changeVulcPage('sezon')">📊 Pregătire Sezon</button>
+      <button class="nav-tab ${vulcPage==='casate'?'active':''}" onclick="changeVulcPage('casate')">🗑 Stoc Casate</button>
+      ${isAdmin ? `<button class="nav-tab ${vulcPage==='jante'?'active':''}" onclick="changeVulcPage('jante')">🔘 Stoc Jante</button>` : ""}
+      <button class="nav-tab ${vulcPage==='istoric'?'active':''}" onclick="changeVulcPage('istoric')">📋 Istoric</button>
+    </div>
+
+    ${vulcPage === 'flota' ? renderFlota() : ""}
+    ${vulcPage === 'stoc' ? renderStoc() : ""}
+    ${vulcPage === 'sezon' ? renderSezon() : ""}
+    ${vulcPage === 'casate' ? renderCasate() : ""}
+    ${vulcPage === 'jante' ? renderJante() : ""}
+    ${vulcPage === 'istoric' ? renderIstoric() : ""}
+    ${vulcPage === 'setari' ? renderSetari() : ""}
+  `;
+}
+
+// ===== FLOTA =====
+function renderFlota() {
+  const isAdmin = currentUser.role === "Admin";
+  let filtered = flota.filter(m => {
+    const tipMatch = filterTip === "toate" || m.tipFata === filterTip || m.tipSpate === filterTip;
+    const dimMatch = !filterDim || fmtDim(m.dimFata) === filterDim || fmtDim(m.dimSpate) === filterDim;
+    const searchMatch = !searchFlota || m.nr?.toLowerCase().includes(searchFlota.toLowerCase()) || m.marca?.toLowerCase().includes(searchFlota.toLowerCase()) || m.model?.toLowerCase().includes(searchFlota.toLowerCase());
+    return tipMatch && dimMatch && searchMatch;
+  });
+
+  const dimOptions = [`<option value="">Toate dimensiunile</option>`, ...dimensiuni.map(d => `<option value="${fmtDim(d)}" ${filterDim===fmtDim(d)?"selected":""}>${fmtDim(d)}</option>`)].join("");
+
+  return `
+  <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;color:#F39C12">🚗 Flotă — ${filtered.length} mașini</div>
+    ${isAdmin ? `<button class="btn btn-primary btn-sm" onclick="toggleAddMasina()">${showAddMasina?"✕":"+ Mașină"}</button>` : ""}
+  </div>
+
+  ${showAddMasina && isAdmin ? renderAddMasinaForm() : ""}
+
+  <input class="search-box" placeholder="🔍 Caută după nr., marcă, model..." value="${searchFlota}" oninput="setSearchFlota(this.value)" />
+
+  <div class="filter-row">
+    ${["toate","Vara","Iarna","All Season"].map(t => `
+    <button class="filter-btn ${filterTip===t?'active-'+(t==='toate'?'toate':t==='Vara'?'vara':t==='Iarna'?'iarna':'allseason'):''}" onclick="setFilterTip('${t}')">
+      ${t==='toate'?'🗂 Toate':tipEmoji(t)+' '+t}
+    </button>`).join("")}
+  </div>
+
+  <div class="form-group" style="margin-bottom:12px">
+    <select onchange="setFilterDim(this.value)" style="background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;width:100%;-webkit-appearance:none">
+      ${dimOptions}
+    </select>
+  </div>
+
+  ${filtered.length === 0 ? `<div class="empty-state">Nicio mașină${searchFlota||filterTip!=='toate'||filterDim?" pentru filtrele selectate":""}</div>` :
+    filtered.map(m => renderMasinaCard(m)).join("")}
+  `;
+}
+
+function renderAddMasinaForm() {
+  const marcaOpts = marci.map(m => `<option value="${m}" ${newMasina.marca===m?"selected":""}>${m}</option>`).join("");
+  const modelOpts = modele.map(m => `<option value="${m}" ${newMasina.model===m?"selected":""}>${m}</option>`).join("");
+  const dimOpts = dimensiuni.map(d => `<option value="${fmtDim(d)}" ${newMasina.dimFata===fmtDim(d)?"selected":""}>${fmtDim(d)}</option>`).join("");
+  const dimOptsSpate = dimensiuni.map(d => `<option value="${fmtDim(d)}" ${newMasina.dimSpate===fmtDim(d)?"selected":""}>${fmtDim(d)}</option>`).join("");
+
+  return `
+  <div class="add-form-box">
+    <div style="font-family:'Playfair Display',serif;font-size:16px;color:#F39C12;margin-bottom:14px">Mașină nouă în flotă</div>
+    <div class="form-group"><label>Nr. Înmatriculare *</label><input id="nm-nr" placeholder="ex: B123KHN" value="${newMasina.nr}" oninput="newMasina.nr=this.value" /></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group"><label>Marcă *</label>
+        <select id="nm-marca" onchange="newMasina.marca=this.value">
+          <option value="">— Selectează —</option>${marcaOpts}
+        </select>
+      </div>
+      <div class="form-group"><label>Model *</label>
+        <select id="nm-model" onchange="newMasina.model=this.value">
+          <option value="">— Selectează —</option>${modelOpts}
+        </select>
+      </div>
+    </div>
+
+    ${!newMasina.diferitSpateFata ? `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group"><label>Tip anvelopă *</label>
+        <select id="nm-tipFata" onchange="newMasina.tipFata=this.value">
+          ${TIPURI.map(t=>`<option ${newMasina.tipFata===t?"selected":""}>${t}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-group"><label>Dimensiune *</label>
+        <select id="nm-dimFata" onchange="newMasina.dimFata=this.value">
+          <option value="">— Selectează —</option>${dimOpts}
+        </select>
+      </div>
+    </div>` : `
+    <div style="background:#0F2040;border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="font-size:12px;color:#F39C12;font-weight:700;margin-bottom:10px;text-transform:uppercase">Față</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label>Tip față *</label>
+          <select id="nm-tipFata" onchange="newMasina.tipFata=this.value">
+            ${TIPURI.map(t=>`<option ${newMasina.tipFata===t?"selected":""}>${t}</option>`).join("")}
+          </select>
+        </div>
+        <div class="form-group"><label>Dimensiune față *</label>
+          <select id="nm-dimFata" onchange="newMasina.dimFata=this.value">
+            <option value="">— Selectează —</option>${dimOpts}
+          </select>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#F39C12;font-weight:700;margin-bottom:10px;margin-top:4px;text-transform:uppercase">Spate</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label>Tip spate *</label>
+          <select id="nm-tipSpate" onchange="newMasina.tipSpate=this.value">
+            ${TIPURI.map(t=>`<option ${newMasina.tipSpate===t?"selected":""}>${t}</option>`).join("")}
+          </select>
+        </div>
+        <div class="form-group"><label>Dimensiune spate *</label>
+          <select id="nm-dimSpate" onchange="newMasina.dimSpate=this.value">
+            <option value="">— Selectează —</option>${dimOptsSpate}
+          </select>
+        </div>
+      </div>
+    </div>`}
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px;background:#0F2040;border-radius:8px">
+      <input type="checkbox" id="nm-diferit" ${newMasina.diferitSpateFata?"checked":""} onchange="toggleDiferitSpate(this.checked)" style="width:18px;height:18px" />
+      <label for="nm-diferit" style="font-size:13px;color:#A0AEC0;cursor:pointer">Dimensiuni diferite față/spate (mașini speciale)</label>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="toggleAddMasina()">Anulează</button>
+      <button class="btn btn-primary" onclick="addMasina()">Adaugă în flotă</button>
+    </div>
+  </div>`;
+}
+
+function renderMasinaCard(m) {
+  const isExp = expandedMasina === m.id;
+  const isAdmin = currentUser.role === "Admin";
+
+  return `
+  <div class="card" style="border-color:${isExp?'#F39C12':'#0F3460'}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer" onclick="toggleMasina('${m.id}')">
+      <div style="flex:1">
+        <div class="card-title">${m.nr}</div>
+        <div style="font-size:13px;color:#A0C4FF;margin-top:2px">${m.marca||""} ${m.model||""}</div>
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="tip-badge ${tipClass(m.tipFata)}">${tipEmoji(m.tipFata)} ${m.tipFata}</span>
+          <span class="dim-badge">${m.dimFata||"—"}</span>
+          ${m.diferitSpateFata ? `<span style="font-size:11px;color:#718096">Spate:</span><span class="tip-badge ${tipClass(m.tipSpate)}">${tipEmoji(m.tipSpate)} ${m.tipSpate}</span><span class="dim-badge">${m.dimSpate||"—"}</span>` : ""}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openSchimb('${m.id}')">🔄 Schimb</button>
+        <span style="color:#4A5568;font-size:14px">${isExp?"▲":"▼"}</span>
+      </div>
+    </div>
+
+    ${isExp ? `
+    <div style="margin-top:14px;border-top:1px solid #0F3460;padding-top:14px">
+      ${isAdmin ? `
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;color:#718096;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Modifică dimensiune</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:11px;color:#A0AEC0;margin-bottom:4px">Tip față</div>
+            <select onchange="updateMasinaTip('${m.id}','fata',this.value)" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:8px;padding:8px 10px;font-size:14px;outline:none;-webkit-appearance:none">
+              ${TIPURI.map(t=>`<option ${m.tipFata===t?"selected":""}>${t}</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#A0AEC0;margin-bottom:4px">Dimensiune față</div>
+            <select onchange="updateMasinaDim('${m.id}','fata',this.value)" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:8px;padding:8px 10px;font-size:14px;outline:none;-webkit-appearance:none">
+              ${dimensiuni.map(d=>`<option ${m.dimFata===fmtDim(d)?"selected":""}>${fmtDim(d)}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="dif-${m.id}" ${m.diferitSpateFata?"checked":""} onchange="updateMasinaSpate('${m.id}',this.checked)" style="width:16px;height:16px" />
+          <label for="dif-${m.id}" style="font-size:13px;color:#A0AEC0;cursor:pointer">Dimensiuni diferite față/spate</label>
+        </div>
+        ${m.diferitSpateFata ? `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div>
+            <div style="font-size:11px;color:#A0AEC0;margin-bottom:4px">Tip spate</div>
+            <select onchange="updateMasinaTip('${m.id}','spate',this.value)" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:8px;padding:8px 10px;font-size:14px;outline:none;-webkit-appearance:none">
+              ${TIPURI.map(t=>`<option ${m.tipSpate===t?"selected":""}>${t}</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#A0AEC0;margin-bottom:4px">Dimensiune spate</div>
+            <select onchange="updateMasinaDim('${m.id}','spate',this.value)" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:8px;padding:8px 10px;font-size:14px;outline:none;-webkit-appearance:none">
+              ${dimensiuni.map(d=>`<option ${m.dimSpate===fmtDim(d)?"selected":""}>${fmtDim(d)}</option>`).join("")}
+            </select>
+          </div>
+        </div>` : ""}
+      </div>` : ""}
+
+      ${isAdmin ? `
+      <div style="text-align:center;margin-top:8px">
+        <button class="btn btn-danger btn-sm" onclick="deleteMasina('${m.id}','${m.nr}')">🗑 Șterge din flotă</button>
+      </div>` : ""}
+    </div>` : ""}
+  </div>`;
+}
+
+// ===== SCHIMB MODAL =====
+function renderSchimbModalVulc() {
+  const m = flota.find(x => x.id === showSchimbModal);
+  if (!m) { showSchimbModal = null; renderVulcanizare(); return; }
+
+  const dimOpts = dimensiuni.map(d => `<option value="${fmtDim(d)}" ${window.schimbData.dimMontat===fmtDim(d)?"selected":""}>${fmtDim(d)}</option>`).join("");
+  const casareDiff = Math.max(0, (parseInt(window.schimbData.cantMontat)||0) - (parseInt(window.schimbData.cantDepozitat)||0));
+
+  document.getElementById("app").innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this){closeSchimb()}">
+    <div class="modal-box">
+      <div class="modal-title">🔄 Schimb Anvelope — ${m.nr}</div>
+      <div style="font-size:13px;color:#A0C4FF;margin-bottom:16px">${m.marca} ${m.model} · ${m.dimFata}</div>
+
+      <div class="form-group">
+        <label>Tip anvelope de montat</label>
+        <select id="s-tip" onchange="window.schimbData.tipMontat=this.value" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:10px;padding:12px 14px;font-size:16px;outline:none;-webkit-appearance:none">
+          ${TIPURI.map(t=>`<option ${window.schimbData.tipMontat===t?"selected":""}>${t}</option>`).join("")}
+        </select>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px;background:#0F2040;border-radius:8px">
+        <input type="checkbox" id="s-altadim" ${window.schimbData.altaDimensiune?"checked":""} onchange="window.schimbData.altaDimensiune=this.checked;renderSchimbModalVulc()" style="width:18px;height:18px" />
+        <label for="s-altadim" style="font-size:13px;color:#A0AEC0;cursor:pointer">Alte dimensiuni (schimb special)</label>
+      </div>
+
+      ${window.schimbData.altaDimensiune ? `
+      <div class="form-group">
+        <label>Dimensiune de montat</label>
+        <select id="s-dim" onchange="window.schimbData.dimMontat=this.value" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:10px;padding:12px 14px;font-size:16px;outline:none;-webkit-appearance:none">
+          <option value="">— Selectează dimensiunea —</option>${dimOpts}
+        </select>
+      </div>` : ""}
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group">
+          <label>Nr. anvelope montate</label>
+          <input type="number" id="s-montat" min="1" max="8" value="${window.schimbData.cantMontat}" oninput="window.schimbData.cantMontat=parseInt(this.value)||0;window.schimbData.motivCasare=document.getElementById('s-casare')?.value||window.schimbData.motivCasare;renderSchimbModalVulc()" />
+        </div>
+        <div class="form-group">
+          <label>Nr. anvelope depozitate</label>
+          <input type="number" id="s-depozitat" min="0" max="8" value="${window.schimbData.cantDepozitat}" oninput="window.schimbData.cantDepozitat=parseInt(this.value)||0;window.schimbData.motivCasare=document.getElementById('s-casare')?.value||window.schimbData.motivCasare;renderSchimbModalVulc()" />
+        </div>
+      </div>
+
+      ${casareDiff > 0 ? `
+      <div style="background:#3A0A0A;border:1px solid #E94560;border-radius:10px;padding:14px;margin-bottom:14px">
+        <div style="color:#E94560;font-weight:700;margin-bottom:8px">⚠️ ${casareDiff} anvelopă/e nu ajung în depozit — MOTIV CASARE obligatoriu</div>
+        <textarea id="s-casare" rows="2" placeholder="ex: Uzură excesivă, avarie..." oninput="window.schimbData.motivCasare=this.value" style="width:100%;background:#0F3460;border:1px solid #E94560;color:#E0E0E0;border-radius:8px;padding:10px;font-size:14px;outline:none;resize:none">${window.schimbData.motivCasare}</textarea>
+      </div>` : ""}
+
+      <div style="background:#0F2040;border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px">
+        <div style="color:#718096;margin-bottom:4px">Rezumat schimb:</div>
+        <div style="color:#CBD5E0">🔽 Din stoc: <strong>${window.schimbData.cantMontat} × ${window.schimbData.tipMontat} ${window.schimbData.altaDimensiune&&window.schimbData.dimMontat?window.schimbData.dimMontat:m.dimFata}</strong></div>
+        <div style="color:#CBD5E0">🔼 În depozit: <strong>${window.schimbData.cantDepozitat} × ${m.tipFata} ${m.dimFata}</strong></div>
+        ${casareDiff > 0 ? `<div style="color:#E94560">🗑 Casate: <strong>${casareDiff} buc</strong></div>` : ""}
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="closeSchimb()">Anulează</button>
+        <button class="btn btn-primary" onclick="efectueazaSchimb('${m.id}')">✅ Confirmă Schimb</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ===== STOC DEPOZIT =====
+function renderStoc() {
+  const isAdmin = currentUser.role === "Admin";
+  let filtered = stocAnvelope.filter(s => {
+    const tipMatch = filterTip === "toate" || s.tip === filterTip;
+    const dimMatch = !filterDim || fmtDim(s) === filterDim;
+    return tipMatch && dimMatch;
+  });
+
+  const totalBuc = filtered.reduce((a, s) => a + (parseInt(s.cantitate)||0), 0);
+
+  return `
+  <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;color:#F39C12">📦 Stoc Depozit</div>
+    ${isAdmin ? `<button class="btn btn-primary btn-sm" onclick="toggleAddStoc()">${showAddStoc?"✕":"+ Adaugă stoc"}</button>` : ""}
+  </div>
+
+  ${showAddStoc && isAdmin ? `
+  <div class="add-form-box">
+    <div style="font-size:14px;font-weight:700;color:#F39C12;margin-bottom:12px">Adaugă anvelope în stoc</div>
+    <div class="form-group"><label>Tip anvelopă</label>
+      <select id="as-tip" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:10px;padding:12px 14px;font-size:16px;outline:none;-webkit-appearance:none">
+        ${TIPURI.map(t=>`<option>${t}</option>`).join("")}
+      </select>
+    </div>
+    <div class="form-group"><label>Dimensiune</label>
+      <select id="as-dim" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:10px;padding:12px 14px;font-size:16px;outline:none;-webkit-appearance:none">
+        <option value="">— Selectează —</option>
+        ${dimensiuni.map(d=>`<option value="${fmtDim(d)}">${fmtDim(d)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="form-group"><label>Cantitate</label><input type="number" id="as-cant" min="1" placeholder="ex: 30" /></div>
+    <div style="background:#0F2040;border-radius:8px;padding:10px;margin-bottom:12px">
+      <div style="font-size:12px;color:#718096">Motiv adăugare: <strong style="color:#4CAF50">Cumpărare</strong></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="toggleAddStoc()">Anulează</button>
+      <button class="btn btn-primary" onclick="addStoc()">Adaugă în stoc</button>
+    </div>
+  </div>` : ""}
+
+  <div class="filter-row">
+    ${["toate","Vara","Iarna","All Season"].map(t => `
+    <button class="filter-btn ${filterTip===t?'active-'+(t==='toate'?'toate':t==='Vara'?'vara':t==='Iarna'?'iarna':'allseason'):''}" onclick="setFilterTip('${t}')">
+      ${t==='toate'?'🗂 Toate':tipEmoji(t)+' '+t}
+    </button>`).join("")}
+  </div>
+
+  <div style="background:#16213E;border:1px solid #F39C12;border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between">
+    <span style="font-size:13px;color:#718096">Total anvelope filtrate:</span>
+    <span style="font-family:'Playfair Display',serif;font-size:20px;color:#F39C12;font-weight:700">${totalBuc} buc</span>
+  </div>
+
+  ${filtered.length === 0 ? `<div class="empty-state">Nicio anvelopă în stoc${filterTip!=='toate'?" pentru filtrul selectat":""}</div>` :
+    filtered.map(s => `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <span class="tip-badge ${tipClass(s.tip)}">${tipEmoji(s.tip)} ${s.tip}</span>
+            <span class="dim-badge">${fmtDim(s)}</span>
+          </div>
+          <div style="font-family:'Playfair Display',serif;font-size:24px;color:#4CAF50;font-weight:700">${s.cantitate} <span style="font-size:14px;color:#718096">bucăți</span></div>
+        </div>
+        ${isAdmin ? `
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="btn btn-danger btn-sm" onclick="deleteStoc('${s.id}','${fmtDim(s)}','${s.tip}',${parseInt(s.cantitate)||0})">🗑 Șterge</button>
+        </div>` : ""}
+      </div>
+    </div>`).join("")}
+  `;
+}
+
+// ===== PREGĂTIRE SEZON =====
+function renderSezon() {
+  const dimOpts = dimensiuni.map(d => `<option value="${fmtDim(d)}" ${filterDim===fmtDim(d)?"selected":""}>${fmtDim(d)}</option>`).join("");
+
+  // Build sezon analysis
+  const analysis = {};
+  dimensiuni.forEach(d => {
+    const dim = fmtDim(d);
+    TIPURI.forEach(tip => {
+      const key = `${dim}__${tip}`;
+      const peMasini = flota.filter(m => (m.dimFata === dim && m.tipFata === tip) || (m.diferitSpateFata && m.dimSpate === dim && m.tipSpate === tip));
+      const nrAnv = peMasini.reduce((a, m) => {
+        let count = 0;
+        if (m.dimFata === dim && m.tipFata === tip) count += (m.diferitSpateFata ? 2 : 4);
+        if (m.diferitSpateFata && m.dimSpate === dim && m.tipSpate === tip) count += 2;
+        return a + count;
+      }, 0);
+      const stocItem = stocAnvelope.find(s => fmtDim(s) === dim && s.tip === tip);
+      const inStoc = parseInt(stocItem?.cantitate || 0);
+      if (nrAnv > 0 || inStoc > 0) {
+        analysis[key] = { dim, tip, peMasini: nrAnv, inStoc, diferenta: inStoc - nrAnv };
+      }
+    });
+  });
+
+  const filteredAnalysis = Object.values(analysis).filter(a => {
+    const tipMatch = filterTip === "toate" || a.tip === filterTip;
+    const dimMatch = !filterDim || a.dim === filterDim;
+    return tipMatch && dimMatch;
+  });
+
+  return `
+  <div style="margin-bottom:12px">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;color:#F39C12;margin-bottom:4px">📊 Pregătire Sezon</div>
+    <div style="font-size:13px;color:#718096">Compară stocul cu necesarul flotei</div>
+  </div>
+
+  <div class="filter-row">
+    ${["toate","Vara","Iarna","All Season"].map(t => `
+    <button class="filter-btn ${filterTip===t?'active-'+(t==='toate'?'toate':t==='Vara'?'vara':t==='Iarna'?'iarna':'allseason'):''}" onclick="setFilterTip('${t}')">
+      ${t==='toate'?'🗂 Toate':tipEmoji(t)+' '+t}
+    </button>`).join("")}
+  </div>
+
+  <div class="form-group" style="margin-bottom:14px">
+    <select onchange="setFilterDim(this.value)" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;-webkit-appearance:none">
+      <option value="">Toate dimensiunile</option>${dimOpts}
+    </select>
+  </div>
+
+  ${filteredAnalysis.length === 0 ? `<div class="empty-state">Nicio dată pentru filtrele selectate</div>` :
+    filteredAnalysis.sort((a,b) => a.diferenta - b.diferenta).map(a => `
+    <div class="card" style="border-color:${a.diferenta < 0 ? '#E94560' : a.diferenta === 0 ? '#F39C12' : '#4CAF50'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+            <span class="tip-badge ${tipClass(a.tip)}">${tipEmoji(a.tip)} ${a.tip}</span>
+            <span class="dim-badge">${a.dim}</span>
+          </div>
+          <div style="font-size:13px;color:#CBD5E0">🚗 Pe mașini: <strong>${a.peMasini} buc</strong></div>
+          <div style="font-size:13px;color:#CBD5E0">📦 În stoc: <strong>${a.inStoc} buc</strong></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:${a.diferenta < 0 ? '#E94560' : '#4CAF50'}">
+            ${a.diferenta >= 0 ? '+' : ''}${a.diferenta}
+          </div>
+          <div style="font-size:11px;color:#718096">${a.diferenta < 0 ? '⚠️ De comandat' : '✅ Suficient'}</div>
+        </div>
+      </div>
+    </div>`).join("")}
+  `;
+}
+
+// ===== STOC CASATE =====
+function renderCasate() {
+  const isAdmin = currentUser.role === "Admin";
+  const grouped = {};
+  stocCasate.forEach(c => {
+    const key = `${fmtDim(c)}__${c.tip}`;
+    if (!grouped[key]) grouped[key] = { dim: fmtDim(c), tip: c.tip, cantitate: 0, items: [] };
+    grouped[key].cantitate += parseInt(c.cantitate||1);
+    grouped[key].items.push(c);
+  });
+
+  return `
+  <div style="margin-bottom:12px">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;color:#E94560;margin-bottom:4px">🗑 Stoc Casate</div>
+    <div style="font-size:13px;color:#718096">Anvelope uzate fizic prezente în locație</div>
+  </div>
+
+  ${Object.keys(grouped).length === 0 ? `<div class="empty-state">Nicio anvelopă casată în locație</div>` :
+    Object.values(grouped).map(g => `
+    <div class="card" style="border-color:#3A0A0A">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+            <span class="tip-badge ${tipClass(g.tip)}">${tipEmoji(g.tip)} ${g.tip}</span>
+            <span class="dim-badge">${g.dim}</span>
+          </div>
+          <div style="font-family:'Playfair Display',serif;font-size:22px;color:#E94560;font-weight:700">${g.cantitate} <span style="font-size:13px;color:#718096">buc</span></div>
+        </div>
+        ${isAdmin ? `
+        <button class="btn btn-danger btn-sm" onclick="deleteStocCasate('${g.items.map(i=>i.id).join(',')}','${g.dim}','${g.tip}')">🗑 Ridicate</button>
+        ` : ""}
+      </div>
+      <div style="margin-top:10px;border-top:1px solid #1A2A4A;padding-top:10px">
+        ${g.items.map(i=>`<div style="font-size:12px;color:#4A5568;padding:3px 0">${i.data||""} · ${i.motiv||"uzură"} · ${i.operator||""}</div>`).join("")}
+      </div>
+    </div>`).join("")}
+  `;
+}
+
+// ===== JANTE =====
+function renderJante() {
+  return `
+  <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;color:#9B8FC7">🔘 Stoc Jante</div>
+    <button class="btn btn-primary btn-sm" onclick="toggleAddJanta()">${showAddJanta?"✕":"+ Adaugă"}</button>
+  </div>
+
+  ${showAddJanta ? `
+  <div class="add-form-box" style="border-color:#9B8FC7">
+    <div class="form-group"><label>Dimensiune jantă</label><input id="j-dim" placeholder="ex: 17 inch, 7J" /></div>
+    <div class="form-group"><label>Tip anvelopă compatibil</label>
+      <select id="j-tip" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:10px;padding:12px 14px;font-size:16px;outline:none;-webkit-appearance:none">
+        ${TIPURI.map(t=>`<option>${t}</option>`).join("")}
+      </select>
+    </div>
+    <div class="form-group"><label>Dimensiune anvelopă compatibilă</label>
+      <select id="j-dimAnv" style="width:100%;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:10px;padding:12px 14px;font-size:16px;outline:none;-webkit-appearance:none">
+        <option value="">— Selectează —</option>
+        ${dimensiuni.map(d=>`<option value="${fmtDim(d)}">${fmtDim(d)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="form-group"><label>Mașină alocată (opțional)</label><input id="j-masina" placeholder="ex: B123KHN" /></div>
+    <div class="form-group"><label>Cantitate</label><input type="number" id="j-cant" min="1" placeholder="ex: 4" /></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="toggleAddJanta()">Anulează</button>
+      <button class="btn btn-primary" onclick="addJanta()">Adaugă</button>
+    </div>
+  </div>` : ""}
+
+  ${stocJante.length === 0 ? `<div class="empty-state">Nicio jantă în stoc</div>` :
+    stocJante.map(j => `
+    <div class="card" style="border-color:#2A1A4A">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#9B8FC7;margin-bottom:4px">${j.dimensiune}</div>
+          <div style="font-size:13px;color:#CBD5E0">
+            <span class="tip-badge ${tipClass(j.tipAnv)}">${tipEmoji(j.tipAnv)} ${j.tipAnv}</span>
+            <span class="dim-badge" style="margin-left:6px">${j.dimAnv||"—"}</span>
+          </div>
+          ${j.masina?`<div style="font-size:12px;color:#A0C4FF;margin-top:4px">🚗 ${j.masina}</div>`:""}
+          <div style="font-size:13px;color:#4CAF50;font-weight:700;margin-top:4px">${j.cantitate} buc</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteJanta('${j.id}')">🗑</button>
+      </div>
+    </div>`).join("")}
+  `;
+}
+
+// ===== ISTORIC =====
+function renderIstoric() {
+  return `
+  <div style="margin-bottom:12px">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;color:#718096">📋 Istoric General</div>
+  </div>
+  ${istoricVulc.length === 0 ? `<div class="empty-state">Nicio înregistrare în istoric</div>` :
+    [...istoricVulc].reverse().map(e => `
+    <div class="card" style="padding:12px 14px">
+      <div style="font-size:11px;color:#4A5568;margin-bottom:4px">🕐 ${e.data} · <strong style="color:#A0C4FF">${e.operator}</strong></div>
+      <div style="font-size:14px;color:#CBD5E0">${e.actiune}</div>
+      ${e.masina?`<div style="font-size:12px;color:#A0C4FF;margin-top:2px">🚗 ${e.masina}</div>`:""}
+    </div>`).join("")}
+  `;
+}
+
+// ===== SETARI ADMIN =====
+function renderSetari() {
+  return `
+  <div style="margin-bottom:16px">
+    <div style="font-family:'Playfair Display',serif;font-size:18px;color:#F39C12;margin-bottom:4px">⚙️ Setări Admin</div>
+    <div style="font-size:13px;color:#718096">Definire mărci, modele și dimensiuni</div>
+  </div>
+
+  <!-- MARCI -->
+  <div style="font-size:12px;color:#718096;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Mărci auto</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+    ${marci.map(m => `<span style="background:#0F2040;border:1px solid #1A3A6E;border-radius:20px;padding:4px 12px;font-size:13px;color:#A0C4FF">${m} <span onclick="deleteMarca('${m}')" style="cursor:pointer;color:#E94560;margin-left:6px">✕</span></span>`).join("")}
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <input id="set-marca" placeholder="Marcă nouă (ex: Ford)" style="flex:1;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:8px;padding:10px 12px;font-size:15px;outline:none" />
+    <button class="btn btn-primary btn-sm" onclick="addMarca()">+ Adaugă</button>
+  </div>
+
+  <!-- MODELE -->
+  <div style="font-size:12px;color:#718096;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Modele auto</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+    ${modele.map(m => `<span style="background:#0F2040;border:1px solid #1A3A6E;border-radius:20px;padding:4px 12px;font-size:13px;color:#A0C4FF">${m} <span onclick="deleteModel('${m}')" style="cursor:pointer;color:#E94560;margin-left:6px">✕</span></span>`).join("")}
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <input id="set-model" placeholder="Model nou (ex: Focus)" style="flex:1;background:#0F3460;border:1px solid #1A4A80;color:#E0E0E0;border-radius:8px;padding:10px 12px;font-size:15px;outline:none" />
+    <button class="btn btn-primary btn-sm" onclick="addModel()">+ Adaugă</button>
+  </div>
+
+  <!-- DIMENSIUNI -->
+  <div style="font-size:12px;color:#718096;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Dimensiuni anvelope</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    ${dimensiuni.map(d => `<span style="background:#0F2040;border:1px solid #2A4A6A;border-radius:8px;padding:4px 10px;font-size:13px;font-family:monospace;color:#A0C4FF">${fmtDim(d)} <span onclick="deleteDim('${fmtDim(d)}')" style="cursor:pointer;color:#E94560;margin-left:4px">✕</span></span>`).join("")}
+  </div>
+  <div style="background:#16213E;border:1px solid #0F3460;border-radius:12px;padding:14px;margin-bottom:16px">
+    <div style="font-size:12px;color:#718096;margin-bottom:10px">Adaugă dimensiune nouă:</div>
+    <div class="dim-input-row" style="margin-bottom:10px">
+      <input id="dim-lat" type="number" placeholder="205" />
+      <span class="dim-sep">/</span>
+      <input id="dim-prof" type="number" placeholder="55" />
+      <span class="dim-sep">R</span>
+      <input id="dim-diam" type="number" placeholder="16" />
+      <div class="dim-c-check">
+        <input type="checkbox" id="dim-c" style="width:16px;height:16px" />
+        <label for="dim-c">C</label>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-sm btn-full" onclick="addDimensiune()">+ Adaugă dimensiune</button>
+  </div>
+  `;
+}
+
+// ===== ACTIONS =====
+window.changePage = (p) => { page = p; if(p !== 'vulcanizare') vulcPage = 'flota'; render(); };
+window.changeVulcPage = (p) => { vulcPage = p; render(); };
+window.rerender = () => { render(); };
+window.toggleDiferitSpate = (checked) => {
+  // Save current form values before re-render
+  newMasina.nr = document.getElementById("nm-nr")?.value || newMasina.nr;
+  newMasina.marca = document.getElementById("nm-marca")?.value || newMasina.marca;
+  newMasina.model = document.getElementById("nm-model")?.value || newMasina.model;
+  newMasina.tipFata = document.getElementById("nm-tipFata")?.value || newMasina.tipFata;
+  newMasina.dimFata = document.getElementById("nm-dimFata")?.value || newMasina.dimFata;
+  newMasina.diferitSpateFata = checked;
+  render();
+};
+window.setFilterTip = (t) => { filterTip = t; render(); };
+window.setFilterDim = (d) => { filterDim = d; render(); };
+window.setSearchFlota = (v) => { searchFlota = v; render(); };
+window.toggleAddMasina = () => { showAddMasina = !showAddMasina; newMasina = { nr: "", marca: "", model: "", tipFata: "Vara", dimFata: "", diferitSpateFata: false, tipSpate: "Vara", dimSpate: "" }; render(); };
+window.toggleAddStoc = () => { showAddStoc = !showAddStoc; render(); };
+window.toggleAddJanta = () => { showAddJanta = !showAddJanta; render(); };
+window.toggleMasina = (id) => { expandedMasina = expandedMasina === id ? null : id; render(); };
+window.openSchimb = (id) => { showSchimbModal = id; window.schimbData = { tipMontat: "Vara", dimMontat: "", cantMontat: 4, cantDepozitat: 4, motivCasare: "", altaDimensiune: false }; renderSchimbModalVulc(); };
+window.closeSchimb = () => { showSchimbModal = null; render(); };
+window.renderSchimbModal = renderSchimbModalVulc;
+
+// Flota actions
+window.addMasina = async () => {
+  const nr = document.getElementById("nm-nr")?.value?.trim().toUpperCase();
+  const marca = document.getElementById("nm-marca")?.value;
+  const model = document.getElementById("nm-model")?.value;
+  const tipFata = document.getElementById("nm-tipFata")?.value;
+  const dimFata = document.getElementById("nm-dimFata")?.value;
+  if (!nr || !marca || !model || !dimFata) { showToast("⚠️ Completează toate câmpurile obligatorii!"); return; }
+  const diferitSpateFata = document.getElementById("nm-diferit")?.checked || false;
+  const tipSpate = document.getElementById("nm-tipSpate")?.value || tipFata;
+  const dimSpate = document.getElementById("nm-dimSpate")?.value || dimFata;
+
+  await addDoc(collection(db, "vulc_flota"), { nr, marca, model, tipFata, dimFata, diferitSpateFata, tipSpate: diferitSpateFata?tipSpate:tipFata, dimSpate: diferitSpateFata?dimSpate:dimFata, createdAt: Date.now(), createdBy: currentUser.name });
+  await addIstoric(`Mașină adăugată în flotă: ${nr} (${marca} ${model})`, nr);
+  showAddMasina = false;
+  showToast("✅ Mașină adăugată în flotă!");
+};
+
+window.deleteMasina = async (id, nr) => {
+  if (!confirm(`Ștergi ${nr} din flotă? Această acțiune nu poate fi anulată.`)) return;
+  await deleteDoc(doc(db, "vulc_flota", id));
+  await addIstoric(`Mașină ștearsă din flotă: ${nr}`, nr);
+  showToast("🗑 Mașină ștearsă din flotă");
+};
+
+window.updateMasinaTip = async (id, parte, tip) => {
+  const field = parte === "fata" ? "tipFata" : "tipSpate";
+  await updateDoc(doc(db, "vulc_flota", id), { [field]: tip });
+  await addIstoric(`Tip anvelopă ${parte} schimbat la ${tip}`, flota.find(m=>m.id===id)?.nr);
+};
+
+window.updateMasinaDim = async (id, parte, dim) => {
+  const field = parte === "fata" ? "dimFata" : "dimSpate";
+  await updateDoc(doc(db, "vulc_flota", id), { [field]: dim });
+  await addIstoric(`Dimensiune ${parte} schimbată la ${dim}`, flota.find(m=>m.id===id)?.nr);
+  showToast("📐 Dimensiune actualizată!");
+};
+
+window.updateMasinaSpate = async (id, checked) => {
+  await updateDoc(doc(db, "vulc_flota", id), { diferitSpateFata: checked });
+  renderVulcanizare();
+};
+
+// Schimb
+window.efectueazaSchimb = async (masinaId) => {
+  const m = flota.find(x => x.id === masinaId);
+  if (!m) return;
+
+  const tipMontat = document.getElementById("s-tip")?.value || window.schimbData.tipMontat;
+  const dimMontat = window.schimbData.altaDimensiune ? (document.getElementById("s-dim")?.value || window.schimbData.dimMontat) : m.dimFata;
+  const cantMontat = parseInt(document.getElementById("s-montat")?.value) || window.schimbData.cantMontat;
+  const cantDepozitat = parseInt(document.getElementById("s-depozitat")?.value) || window.schimbData.cantDepozitat;
+  const casareDiff = Math.max(0, cantMontat - cantDepozitat);
+  const motivCasare = document.getElementById("s-casare")?.value?.trim() || window.schimbData.motivCasare;
+
+  if (casareDiff > 0 && !motivCasare) { showToast("⚠️ Completează motivul casării!"); return; }
+  if (!dimMontat) { showToast("⚠️ Selectează dimensiunea de montat!"); return; }
+
+  // 1. Scade din stoc (anvelopele montate)
+  const stocItem = stocAnvelope.find(s => fmtDim(s) === dimMontat && s.tip === tipMontat);
+  if (stocItem) {
+    const nouaCant = Math.max(0, (parseInt(stocItem.cantitate)||0) - cantMontat);
+    await updateDoc(doc(db, "vulc_stoc", stocItem.id), { cantitate: nouaCant });
+  }
+
+  // 2. Adaugă în stoc (anvelopele depozitate)
+  if (cantDepozitat > 0) {
+    const stocExist = stocAnvelope.find(s => fmtDim(s) === m.dimFata && s.tip === m.tipFata);
+    if (stocExist) {
+      await updateDoc(doc(db, "vulc_stoc", stocExist.id), { cantitate: (parseInt(stocExist.cantitate)||0) + cantDepozitat });
+    } else {
+      const dimParts = dimensiuni.find(d => fmtDim(d) === m.dimFata) || { lat: "", profil: "", diam: "", c: false };
+      await addDoc(collection(db, "vulc_stoc"), { ...dimParts, tip: m.tipFata, cantitate: cantDepozitat });
+    }
+  }
+
+  // 3. Casare
+  if (casareDiff > 0) {
+    await addDoc(collection(db, "vulc_casate"), {
+      ...( dimensiuni.find(d => fmtDim(d) === m.dimFata) || { lat: "", profil: "", diam: "", c: false }),
+      tip: m.tipFata, cantitate: casareDiff, motiv: motivCasare,
+      masina: m.nr, operator: currentUser.name, data: nowStr(), createdAt: Date.now()
+    });
+  }
+
+  // 4. Actualizează mașina
+  const updates = { tipFata: tipMontat };
+  if (window.schimbData.altaDimensiune && dimMontat) updates.dimFata = dimMontat;
+  await updateDoc(doc(db, "vulc_flota", masinaId), updates);
+
+  // 5. Istoric
+  await addIstoric(`Schimb anvelope: montat ${cantMontat}×${tipMontat} ${dimMontat}, depozitat ${cantDepozitat}×${m.tipFata} ${m.dimFata}${casareDiff>0?`, casat ${casareDiff} (${motivCasare})`:""}`, m.nr);
+
+  showSchimbModal = null;
+  showToast("✅ Schimb efectuat cu succes!");
+};
+
+// Stoc
+window.addStoc = async () => {
+  const tip = document.getElementById("as-tip")?.value;
+  const dimStr = document.getElementById("as-dim")?.value;
+  const cant = parseInt(document.getElementById("as-cant")?.value) || 0;
+  if (!dimStr || cant <= 0) { showToast("⚠️ Completează dimensiunea și cantitatea!"); return; }
+  const dimObj = dimensiuni.find(d => fmtDim(d) === dimStr) || { lat: "", profil: "", diam: "", c: false };
+  const exist = stocAnvelope.find(s => fmtDim(s) === dimStr && s.tip === tip);
+  if (exist) {
+    await updateDoc(doc(db, "vulc_stoc", exist.id), { cantitate: (parseInt(exist.cantitate)||0) + cant });
+  } else {
+    await addDoc(collection(db, "vulc_stoc"), { ...dimObj, tip, cantitate: cant });
+  }
+  await addIstoric(`Adăugat stoc: ${cant}×${tip} ${dimStr} (Cumpărare)`);
+  showAddStoc = false;
+  showToast("✅ Stoc adăugat!");
+};
+
+window.deleteStoc = async (id, dim, tip, cantCurenta) => {
+  const cantStr = prompt(`Câte anvelope vrei să ștergi din stocul de ${tip} ${dim}?\n(Stoc curent: ${cantCurenta} buc)`);
+  if (!cantStr) return;
+  const cant = parseInt(cantStr);
+  if (isNaN(cant) || cant <= 0) { showToast("⚠️ Cantitate invalidă!"); return; }
+  if (cant > cantCurenta) { showToast(`⚠️ Nu poți șterge mai mult decât stocul curent (${cantCurenta})!`); return; }
+  const motiv = prompt(`Motiv ștergere ${cant} buc ${tip} ${dim}:\n(ex: Vândute, Casate, Pierdute)`);
+  if (!motiv) return;
+
+  const nouaCant = cantCurenta - cant;
+  if (nouaCant === 0) {
+    await deleteDoc(doc(db, "vulc_stoc", id));
+  } else {
+    await updateDoc(doc(db, "vulc_stoc", id), { cantitate: nouaCant });
+  }
+  // Add to casate
+  await addDoc(collection(db, "vulc_casate"), {
+    lat: "", profil: "", diam: "", c: false, tip, cantitate: cant,
+    motiv, operator: currentUser.name, data: nowStr(), createdAt: Date.now(),
+    dim
+  });
+  await addIstoric(`Stoc șters: ${cant}×${tip} ${dim} — Motiv: ${motiv}`);
+  showToast("🗑 Stoc actualizat!");
+};
+
+window.deleteStocCasate = async (ids, dim, tip) => {
+  if (!confirm(`Confirmi ridicarea anvelopelor casate ${tip} ${dim}?`)) return;
+  for (const id of ids.split(",")) {
+    if (id) await deleteDoc(doc(db, "vulc_casate", id.trim()));
+  }
+  await addIstoric(`Anvelope casate ridicate: ${tip} ${dim}`);
+  showToast("✅ Anvelope casate ridicate!");
+};
+
+// Jante
+window.addJanta = async () => {
+  const dim = document.getElementById("j-dim")?.value?.trim();
+  const cant = parseInt(document.getElementById("j-cant")?.value) || 0;
+  if (!dim) { showToast("⚠️ Completează dimensiunea jantei!"); return; }
+  await addDoc(collection(db, "vulc_jante"), {
+    dimensiune: dim, tipAnv: document.getElementById("j-tip")?.value,
+    dimAnv: document.getElementById("j-dimAnv")?.value, masina: document.getElementById("j-masina")?.value || "",
+    cantitate: cant, createdBy: currentUser.name, createdAt: Date.now()
+  });
+  showAddJanta = false;
+  showToast("✅ Jantă adăugată!");
+};
+
+window.deleteJanta = async (id) => {
+  if (!confirm("Ștergi această jantă din stoc?")) return;
+  await deleteDoc(doc(db, "vulc_jante", id));
+  showToast("🗑 Jantă ștearsă!");
+};
+
+// Setari Admin
+window.addMarca = async () => {
+  const val = document.getElementById("set-marca")?.value?.trim();
+  if (!val) return;
+  const updated = [...new Set([...marci, val])];
+  await setDoc(doc(db, "vulc_setari", "marci"), { lista: updated });
+  showToast("✅ Marcă adăugată!");
+};
+
+window.deleteMarca = async (val) => {
+  const updated = marci.filter(m => m !== val);
+  await setDoc(doc(db, "vulc_setari", "marci"), { lista: updated });
+};
+
+window.addModel = async () => {
+  const val = document.getElementById("set-model")?.value?.trim();
+  if (!val) return;
+  const updated = [...new Set([...modele, val])];
+  await setDoc(doc(db, "vulc_setari", "modele"), { lista: updated });
+  showToast("✅ Model adăugat!");
+};
+
+window.deleteModel = async (val) => {
+  const updated = modele.filter(m => m !== val);
+  await setDoc(doc(db, "vulc_setari", "modele"), { lista: updated });
+};
+
+window.addDimensiune = async () => {
+  const lat = document.getElementById("dim-lat")?.value?.trim();
+  const prof = document.getElementById("dim-prof")?.value?.trim();
+  const diam = document.getElementById("dim-diam")?.value?.trim();
+  const c = document.getElementById("dim-c")?.checked || false;
+  if (!lat || !prof || !diam) { showToast("⚠️ Completează toate câmpurile!"); return; }
+  const newD = { lat, profil: prof, diam, c };
+  if (dimensiuni.find(d => fmtDim(d) === fmtDim(newD))) { showToast("⚠️ Dimensiunea există deja!"); return; }
+  const updated = [...dimensiuni, newD];
+  await setDoc(doc(db, "vulc_setari", "dimensiuni"), { lista: updated });
+  showToast("✅ Dimensiune adăugată!");
+};
+
+window.deleteDim = async (dimStr) => {
+  const updated = dimensiuni.filter(d => fmtDim(d) !== dimStr);
+  await setDoc(doc(db, "vulc_setari", "dimensiuni"), { lista: updated });
+};
+
+
+// Make vulcanizare functions globally accessible
+window.renderSchimbModalVulc = renderSchimbModalVulc;
+
+// ===== VULCANIZARE FIREBASE LISTENERS =====
+onSnapshot(collection(db, "vulc_flota"), snap => {
+  flota = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  flota.sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+  renderVulcanizare();
+});
+onSnapshot(collection(db, "vulc_stoc"), snap => {
+  stocAnvelope = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderVulcanizare();
+});
+onSnapshot(collection(db, "vulc_casate"), snap => {
+  stocCasate = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderVulcanizare();
+});
+onSnapshot(collection(db, "vulc_jante"), snap => {
+  stocJante = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderVulcanizare();
+});
+onSnapshot(collection(db, "vulc_istoric"), snap => {
+  istoricVulc = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  istoricVulc.sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+  renderVulcanizare();
+});
+
+// Settings
+onSnapshot(doc(db, "vulc_setari", "marci"), snap => { if(snap.exists()) marci = snap.data().lista || []; if (page === "vulcanizare") render(); });
+onSnapshot(doc(db, "vulc_setari", "modele"), snap => { if(snap.exists()) modele = snap.data().lista || []; render(); });
+onSnapshot(doc(db, "vulc_setari", "dimensiuni"), snap => { if(snap.exists()) dimensiuni = snap.data().lista || []; render(); });
+
+
+
+onSnapshot(collection(db, "pins"), snap => {
+  registeredPins = snap.docs.map(d => ({ pin: d.id, ...d.data() }))
+    .filter(p => p.name)
+    .sort((a, b) => (a.name||"").localeCompare(b.name||""));
+});
+
+// Load settings
+(async () => {
+  try {
+    const slaDoc = await getDoc(doc(db, "settings", "sla"));
+    if (slaDoc.exists()) settings = slaDoc.data();
+  } catch(e) {}
+})();
+
+</script>
+</body>
+</html>
